@@ -5,34 +5,20 @@ import numpy as np
 "----------------------------------------------------------------------------------------------------------------------"
 
 
-def load_data(sub_sample=True, add_outlier=False):
+def load_data():
     """Load data and convert it to the metric system."""
-    path_dataset = "height_weight_genders.csv"
-    data = np.genfromtxt(path_dataset, delimiter=",", skip_header=1, usecols=[1, 2])
-    height = data[:, 0]
-    weight = data[:, 1]
-    gender = np.genfromtxt(
+    path_dataset = "../data/train.csv"
+    dataset = np.genfromtxt(path_dataset, delimiter=",", skip_header=1)
+    data = dataset[:, 2:]
+    ids = dataset[:, 0]
+    pred = np.genfromtxt(
         path_dataset,
         delimiter=",",
         skip_header=1,
         usecols=[0],
-        converters={0: lambda x: 0 if b"Male" in x else 1},
+        converters={0: lambda x: 0 if b"s" in x else 1}
     )
-    # Convert to metric system
-    height *= 0.025
-    weight *= 0.454
-
-    # sub-sample
-    if sub_sample:
-        height = height[::50]
-        weight = weight[::50]
-
-    if add_outlier:
-        # outlier experiment
-        height = np.concatenate([height, [1.1, 1.2]])
-        weight = np.concatenate([weight, [51.5 / 0.454, 55.3 / 0.454]])
-
-    return height, weight, gender
+    return data, pred, ids
 
 
 def standardize(x):
@@ -44,10 +30,10 @@ def standardize(x):
     return x, mean_x, std_x
 
 
-def build_model_data(height, weight):
+def build_model_data(data, pred):
     """Form (y,tX) to get regression data in matrix form."""
-    y = weight
-    x = height
+    y = pred
+    x = data
     num_samples = len(y)
     tx = np.c_[np.ones(num_samples), x]
     return y, tx
