@@ -5,9 +5,9 @@ import numpy as np
 "----------------------------------------------------------------------------------------------------------------------"
 
 
-def load_data():
+def load_data(datafile):
     """Load data and convert it to the metric system."""
-    path_dataset = "../data/train.csv"
+    path_dataset = f"../data/{datafile}"
     dataset = np.genfromtxt(path_dataset, delimiter=",", skip_header=1)
     data = dataset[:, 2:]
     ids = dataset[:, 0]
@@ -15,8 +15,8 @@ def load_data():
         path_dataset,
         delimiter=",",
         skip_header=1,
-        usecols=[0],
-        converters={0: lambda x: 0 if b"s" in x else 1}
+        usecols=[1],
+        converters={1: lambda x: 0 if b"s" in x else 1}
     )
     return data, pred, ids
 
@@ -83,7 +83,7 @@ def compute_loss_mse(y, tx, w):
     """
 
     e = y - np.dot(tx, w)
-    return np.dot(e.T, e)
+    return (1/(2*len(y)))*np.dot(e.T, e)
 
 
 def compute_gradient_mse(y, tx, w):
@@ -127,7 +127,6 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         loss = compute_loss_mse(y, tx, w)
         grad = compute_gradient_mse(y, tx, w)
         w = w - gamma * grad
-
     return w, loss
 
 
