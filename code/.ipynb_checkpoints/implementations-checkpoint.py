@@ -135,7 +135,7 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
 "----------------------------------------------------------------------------------------------------------------------"
 
 
-def stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma):
+def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
     """The Stochastic Gradient Descent algorithm (SGD).
     Args:
         y: shape=(N, )
@@ -150,23 +150,35 @@ def stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma):
     """
 
     w = initial_w
-    loss = 0
+    loss = np.inf
+    batch_size = 1
 
     for n_iter in range(max_iters):
-        
-        for y_batch, tx_batch in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
-            loss = compute_loss(y, tx, w)
-            grad, _ = compute_gradient_mse(y_batch, tx_batch, w)
+        for y_batch, tx_batch in batch_iter(y, tx, batch_size):
+            grad = compute_gradient_mse(y_batch, tx_batch, w)
             w = w - gamma * grad
-            
-        print(
-            "SGD iter. {bi}/{ti}: loss={l}".format(
-                bi=n_iter, ti=max_iters - 1, l=loss
-            )
-        )
+            loss = compute_loss_mse(y, tx, w)
     return w, loss
 
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                              Least squares regression using normal equations                                     """
 "----------------------------------------------------------------------------------------------------------------------"
+
+
+def least_squares(y, tx):
+    """Calculate the least squares solution.
+       returns mse, and optimal weights.
+    Args:
+        y: numpy array of shape (N,).
+        tx: numpy array of shape (N,M).
+    Returns:
+        w: optimal weights, numpy array of shape(M,).
+        mse: scalar.
+    """
+    
+    a = tx.T.dot(tx)
+    b = tx.T.dot(y)
+    w = np.linalg.solve(a, b)
+    loss = compute_loss_mse(y, tx, w)
+    return w, loss
