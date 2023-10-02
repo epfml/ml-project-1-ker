@@ -137,38 +137,34 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
 
 def stochastic_gradient_descent(y, tx, initial_w, batch_size, max_iters, gamma):
     """The Stochastic Gradient Descent algorithm (SGD).
-
     Args:
-        y: numpy array of shape=(N, )
-        tx: numpy array of shape=(N,M)
-        initial_w: numpy array of shape=(M, ). The initial guess (or the initialization) for the model parameters
-        batch_size: scalar denoting the number of data points in a mini-batch used for computing the stochastic gradient
-        max_iters: scalar denoting the total number of iterations of SGD
-        gamma: scalar denoting the stepsize
-
+        y: shape=(N, )
+        tx: shape=(N,M)
+        initial_w: shape=(M, ). The initial guess (or the initialization) for the model parameters
+        batch_size: a scalar denoting the number of data points in a mini-batch used for computing the stochastic gradient
+        max_iters: a scalar denoting the total number of iterations of SGD
+        gamma: a scalar denoting the stepsize
     Returns:
         losses: a list of length max_iters containing the loss value (scalar) for each iteration of SGD
-        ws: a list of length max_iters containing the model parameters as numpy arrays of shape (M, ),
-            for each iteration of SGD
+        ws: a list of length max_iters containing the model parameters as numpy arrays of shape (M, ), for each iteration         of SGD
     """
 
-    # Define parameters to store w and loss
-    final_loss = 0
     w = initial_w
+    loss = 0
 
     for n_iter in range(max_iters):
-        loss = 0
-        grad = np.zeros(w.shape)
-
-        for minibatch_y, minibatch_tx in batch_iter(y, tx, batch_size):
-            loss = loss + compute_loss_mse(minibatch_y, minibatch_tx, w)
-            grad = grad + compute_gradient_mse(minibatch_y, minibatch_tx, w)
-
-        grad = (1 / batch_size) * grad
-        final_loss = loss
-        w = w - gamma * grad
-
-    return w, final_loss
+        
+        for y_batch, tx_batch in batch_iter(y, tx, batch_size=batch_size, num_batches=1):
+            loss = compute_loss(y, tx, w)
+            grad, _ = compute_gradient_mse(y_batch, tx_batch, w)
+            w = w - gamma * grad
+            
+        print(
+            "SGD iter. {bi}/{ti}: loss={l}".format(
+                bi=n_iter, ti=max_iters - 1, l=loss
+            )
+        )
+    return w, loss
 
 
 "----------------------------------------------------------------------------------------------------------------------"
