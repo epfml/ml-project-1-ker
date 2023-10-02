@@ -150,6 +150,7 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         loss = compute_loss_mse(y, tx, w)
         grad = compute_gradient_mse(y, tx, w)
         w = w - gamma * grad
+        print(loss)
     return w, loss
 
 
