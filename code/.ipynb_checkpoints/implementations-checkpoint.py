@@ -30,6 +30,29 @@ def standardize(x):
     return x, mean_x, std_x
 
 
+def standardize_clean(x):
+    """
+    Replace NaN values in a feature with the mean of the non-NaN values.
+
+    Args:
+        x (numpy.ndarray): 1D array representing a feature.
+
+    Returns:
+        numpy.ndarray: 1D array with NaN values replaced by the mean.
+    """
+    x[x == -999] = np.nan
+    nan_indices = np.isnan(x)
+    non_nan_indices = ~nan_indices  # Invert the nan_indices to get non-NaN indices
+    mean_x = np.mean(x[non_nan_indices])
+    x[nan_indices] = mean_x
+    
+    x = x - mean_x
+    std_x = np.std(x[non_nan_indices])
+    x = x / std_x
+    
+    return x
+
+
 def build_model_data(data, pred):
     """Form (y,tX) to get regression data in matrix form."""
     y = pred
