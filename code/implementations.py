@@ -9,16 +9,7 @@ def load_data(datafile):
     """Load data and convert it to the metric system."""
     path_dataset = f"../data/{datafile}"
     dataset = np.genfromtxt(path_dataset, delimiter=",", skip_header=1)
-    data = dataset[:, 2:]
-    ids = dataset[:, 0]
-    pred = np.genfromtxt(
-        path_dataset,
-        delimiter=",",
-        skip_header=1,
-        usecols=[1],
-        converters={1: lambda x: 0 if b"s" in x else 1}
-    )
-    return data, pred, ids
+    return dataset
 
 
 def standardize(x):
@@ -40,7 +31,6 @@ def standardize_clean(x):
     Returns:
         numpy.ndarray: 1D array with NaN values replaced by the mean.
     """
-    x[x == -999] = np.nan
     nan_indices = np.isnan(x)
     non_nan_indices = ~nan_indices  # Invert the nan_indices to get non-NaN indices
     mean_x = np.mean(x[non_nan_indices])
@@ -48,9 +38,9 @@ def standardize_clean(x):
     
     x = x - mean_x
     std_x = np.std(x[non_nan_indices])
-    x = x / std_x
-    
-    return x
+    if std_x != 0 : 
+        x = x / std_x
+    return x, std_x
 
 
 def build_model_data(data, pred):
@@ -150,7 +140,6 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         loss = compute_loss_mse(y, tx, w)
         grad = compute_gradient_mse(y, tx, w)
         w = w - gamma * grad
-        print(loss)
     return w, loss
 
 
