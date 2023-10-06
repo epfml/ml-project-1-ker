@@ -195,3 +195,82 @@ def least_squares(y, tx):
     w = np.linalg.solve(a, b)
     loss = compute_loss_mse(y, tx, w)
     return w, loss
+
+"----------------------------------------------------------------------------------------------------------------------"
+"""                              Logistic Regression                                                                 """
+"----------------------------------------------------------------------------------------------------------------------"
+
+def sigmoid(t):
+    return 1.0 / (1 + np.exp(-t))
+
+
+def calculate_loss(y, tx, w):
+    """compute the cost by negative log likelihood.
+
+    Args:
+        y:  shape=(N, 1)
+        tx: shape=(N, D)
+        w:  shape=(D, 1)
+
+    Returns:
+        a non-negative loss
+    """
+    assert y.shape[0] == tx.shape[0]
+    assert tx.shape[1] == w.shape[0]
+
+    pred = sigmoid(tx.dot(w))
+    loss = y.T.dot(np.log(pred)) + (1 - y).T.dot(np.log(1 - pred))
+    return np.squeeze(-loss).item() * (1 / y.shape[0])
+
+
+def calculate_gradient(y, tx, w):
+    """compute the gradient of loss.
+
+    Args:
+        y:  shape=(N, 1)
+        tx: shape=(N, D)
+        w:  shape=(D, 1)
+
+    Returns:
+        a vector of shape (D, 1)
+
+    """
+    pred = sigmoid(tx.dot(w))
+    grad = tx.T.dot(pred - y) * (1 / y.shape[0])
+    return grad
+
+
+def logistic_gradient_descent(y,tx,initial_w,gamma,max_iters):
+
+    ws = [initial_w]
+    loss = 0
+    w = initial_w
+
+    for n_iter in range(max_iters):
+            # compute a stochastic gradient and loss
+            grad = calculate_gradient(y,tx,w)
+            # update w through the stochastic gradient update
+            w = w - gamma * grad     
+
+    loss = calculate_loss(y, tx, w)
+    return w, loss
+
+def regd_logistic_regression(X, y, lr=0.01, num_iter=100000, fit_intercept=True, lambda_=0.1, verbose=False):
+    if fit_intercept:
+        X = np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)
+        
+    theta = np.zeros(X.shape[1])
+    
+    for i in range(num_iter):
+        z = np.dot(X, theta)
+        h = 1 / (1 + np.exp(-z))
+        gradient = np.dot(X.T, (h - y)) / y.size
+        theta -= lr * gradient
+        theta[1:] -= lr * lambda_ / y.size * theta[1:]  # Regularization term
+        
+        if(verbose and i % 10000 == 0):
+            z = np.dot(X, theta)
+            h = 1 / (1 + np.exp(-z))
+            print(f'loss: {(-y * np.log(h) - (1 - y) * np.log(1 - h)).mean()} \t')
+    
+    return theta
