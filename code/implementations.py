@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.ma as ma
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                                         Helper functions                                                         """
@@ -6,11 +7,23 @@ import numpy as np
 
 
 def load_data(datafile):
-    """Load data and convert it to the metric system."""
+    """Load data."""
     path_dataset = f"../data/{datafile}"
     dataset = np.genfromtxt(path_dataset, delimiter=",", skip_header=1)
     return dataset
 
+def clean_data(data):
+    """Clean the data column by column."""
+    cleaned_data = data
+    
+    masked_data = ma.masked_values(data[:, 240], [77, 99])
+    cleaned_data[:, 240] = masked_data.filled(np.nan)
+    
+    masked_data = ma.masked_values(data[:, 241], 9)
+    cleaned_data[:, 241] = masked_data.filled(np.nan)
+    
+    return cleaned_data
+    
 
 def standardize(x):
     """Standardize the original data set."""
