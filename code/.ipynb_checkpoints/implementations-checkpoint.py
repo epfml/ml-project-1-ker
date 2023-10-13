@@ -1,4 +1,5 @@
 import numpy as np
+import csv
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                                         Helper functions                                                         """
@@ -10,6 +11,20 @@ def load_data(datafile):
     path_dataset = f"../data/{datafile}"
     dataset = np.genfromtxt(path_dataset, delimiter=",", skip_header=1)
     return dataset
+
+def create_csv_submission(y_pred, name):
+    """
+    Creates an output file in .csv format for submission to Kaggle or AIcrowd
+    Arguments: ids (event ids associated with each prediction)
+               y_pred (predicted class labels)
+               name (string name of .csv output file to be created)
+    """
+    with open(name, "w") as csvfile:
+        fieldnames = ["_MICHD"]
+        writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=fieldnames)
+        writer.writeheader()
+        for r1 in y_pred:
+            writer.writerow({"_MICHD": int(r1)})
 
 
 def standardize(x):
