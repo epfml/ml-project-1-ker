@@ -411,7 +411,7 @@ def ridge_regression(y, tx, lambda_):
     
     return np.linalg.solve(a, b)
 
-def ridge_regression_demo(x_tr, x_te, y_tr, y_te,lambda_,degree) : 
+def ridge_regression_demo(x_tr, x_te, y_tr, y_te,lambdas,degrees) : 
     
     best_lambdas = []
     best_rmses = []
@@ -423,10 +423,10 @@ def ridge_regression_demo(x_tr, x_te, y_tr, y_te,lambda_,degree) :
         tx_tr = build_poly(x_tr, degree)
         
         
-        for lambda_ in lambdas:
+        for lam in lambdas:
             rmse_te_tmp = []
             weight = ridge_regression(y_tr, tx_tr, lam)
-            rmse_te_tmp.append(np.sqrt(2 * compute_loss_mse(y_te, tx_te, weight))
+            rmse_te_tmp.append(np.sqrt(2 * compute_loss_mse(y_te, tx_te, weight)))
                                
         rmse_te.append(np.mean(rmse_te_tmp))
             
