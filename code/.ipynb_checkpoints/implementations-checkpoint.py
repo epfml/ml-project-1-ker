@@ -169,6 +169,15 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
+def replace(arr, old_values, new_values):
+    
+    result = arr.copy()
+    for old_val, new_val in zip(old_values, new_values):
+        result[result == old_val] = new_val
+
+    return result            
+            
+
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                                     Linear regression using gradient descent                                     """
