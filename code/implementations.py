@@ -217,33 +217,46 @@ def IntoInches(x):
 def WeekToMonth(x):
     x_str = str(x)
     if x_str[0] == "1":       
-        return (4.25*int(x_str[-2:])).astype(int)
-    else:
-        return int(x_str[-2:])
+        return 4*int(x_str[-4:-2])
+    elif x_str[0] == "2":
+        return int(x_str[-4:-2])
+    else :
+        return x
+    
     
 def DayToMonth(x):
     x_str = str(x)
     if x_str[0] == "1":       
-        return 30 *int(x_str[-2:])
+        return 30 *int(x_str[-4:-2])
     elif x_str[0] == "2":
-        return (4.25*int(x_str[-2:])).astype(int)
-    else 
-        return int(x_str[-2:])
+        return 4*int(x_str[-4:-2])
+    elif x_str[0] == "3":
+        return int(x_str[-4:-2])
+    else :
+        return x
+    
     
 def DayToYear(x):
     x_str = str(x)
     if x_str[0] == "1":       
-        return 365 *int(x_str[-2:])
+        return 365 *int(x_str[-4:-2])
     elif x_str[0] == "2":
-        return 52*int(x_str[-2:])
+        return 52*int(x_str[-4:-2])
     elif x_str[0] == "3":
-        return 12 * int(x_str[-2:])
-    else
-        return int(x_str[-2:])
+        return 12 * int(x_str[-4:-2])
+    elif x_str[0] == "4":
+        return int(x_str[-4:-2])
+    else:
+        return x 
 
 def HourToMinutes(x):
     x_str = str(x)
-    return int(x_str[0])*60 + int(x_str[-2:])
+    if len(x_str) == 4 :
+        return int(x_str[-4:-2])
+    elif len(x_str) == 5 :   
+        return int(x_str[0])*60 + int(x_str[-4:-2])
+    else: 
+        return x
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                                     Linear regression using gradient descent                                     """
