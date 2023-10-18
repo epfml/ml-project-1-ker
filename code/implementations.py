@@ -198,6 +198,52 @@ def pca(x_train):
     
     return indices, index
 
+"----------------------------------------------------------------------------------------------------------------------"
+"""                                        Conversion metrics functions                                              """
+"----------------------------------------------------------------------------------------------------------------------"
+
+def IntoPounds(x):
+    if x >= 9000 :
+        return int((x - 9000) * 2.20462)
+    else:
+        return x 
+
+def IntoInches(x):
+    if x < 9000:          
+        return np.floor(x/100)*12 + (x % 100)
+    else: 
+        return (x - 9000) * 0.393701
+
+def WeekToMonth(x):
+    x_str = str(x)
+    if x_str[0] == "1":       
+        return (4.25*int(x_str[-2:])).astype(int)
+    else:
+        return int(x_str[-2:])
+    
+def DayToMonth(x):
+    x_str = str(x)
+    if x_str[0] == "1":       
+        return 30 *int(x_str[-2:])
+    elif x_str[0] == "2":
+        return (4.25*int(x_str[-2:])).astype(int)
+    else 
+        return int(x_str[-2:])
+    
+def DayToYear(x):
+    x_str = str(x)
+    if x_str[0] == "1":       
+        return 365 *int(x_str[-2:])
+    elif x_str[0] == "2":
+        return 52*int(x_str[-2:])
+    elif x_str[0] == "3":
+        return 12 * int(x_str[-2:])
+    else
+        return int(x_str[-2:])
+
+def HourToMinutes(x):
+    x_str = str(x)
+    return int(x_str[0])*60 + int(x_str[-2:])
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                                     Linear regression using gradient descent                                     """
