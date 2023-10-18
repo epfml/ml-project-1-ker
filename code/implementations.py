@@ -87,7 +87,7 @@ def gen_clean(raw_data):
     data = data[:, indices]
     data = np.squeeze(data, axis = 1)
     
-    data_cleaned = data[:, 10:]
+    data_cleaned = data[:, 9:]
         
     return data_cleaned, indices
 
@@ -175,8 +175,28 @@ def replace(arr, old_values, new_values):
     for old_val, new_val in zip(old_values, new_values):
         result[result == old_val] = new_val
 
-    return result            
-            
+    return result  
+
+
+def pca(x_train):
+    
+    cov = np.cov(x_train.T)
+    cov = np.round(cov, 2)
+    
+    eig_val, eig_vec = np.linalg.eig(cov)
+    
+    indices = np.arange(0,len(eig_val), 1)
+    indices = ([x for _,x in sorted(zip(eig_val, indices))])[::-1]
+    eig_val = eig_val[indices]
+    eig_vec = eig_vec[:,indices]
+    
+    sum_eig_val = np.sum(eig_val)
+    explained_variance = eig_val/ sum_eig_val
+    cumulative_variance = np.cumsum(explained_variance)
+    
+    index = np.argmax(cumulative_variance > 0.95)
+    
+    return indices, index
 
 
 "----------------------------------------------------------------------------------------------------------------------"
