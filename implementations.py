@@ -73,28 +73,26 @@ def create_csv_submission(ids, y_pred, name):
         writer.writeheader()
         for r1, r2 in zip(ids, y_pred):
             writer.writerow({"Id": int(r1), "Prediction": int(r2)})
-            
+
 
 def gen_clean(raw_data):
-    
     data = np.ones(raw_data.shape)
     stds = np.array([])
     for i in range(data.shape[1]):
         d, std = standardize_clean(raw_data[:, i])
         data[:, i] = d
         stds = np.append(stds, std)
-        
+
     indices = np.where(stds != 0)
     data = data[:, indices]
-    data = np.squeeze(data, axis = 1)
-    
+    data = np.squeeze(data, axis=1)
+
     data_cleaned = data[:, 9:]
-        
+
     return data_cleaned, indices
 
 
 def cross(data_cleaned, pred, ratio):
-    
     train_size = np.floor(data_cleaned.shape[0] * ratio).astype(int)
 
     tx_tr = data_cleaned[:train_size, :]
@@ -102,8 +100,9 @@ def cross(data_cleaned, pred, ratio):
 
     tx_te = data_cleaned[train_size:, :]
     y_te = pred[train_size:,]
-    
+
     return tx_tr, tx_te, y_tr, y_te
+
 
 def standardize(x):
     """Standardize the original data set."""
@@ -128,10 +127,10 @@ def standardize_clean(x):
     non_nan_indices = ~nan_indices  # Invert the nan_indices to get non-NaN indices
     mean_x = np.mean(x[non_nan_indices])
     x[nan_indices] = mean_x
-    
+
     x = x - mean_x
     std_x = np.std(x[non_nan_indices])
-    if std_x != 0 : 
+    if std_x != 0:
         x = x / std_x
     return x, std_x
 
@@ -170,33 +169,32 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
+
 def replace(arr, old_values, new_values):
-    
     result = arr.copy()
     for old_val, new_val in zip(old_values, new_values):
         result[result == old_val] = new_val
 
-    return result  
+    return result
 
 
 def pca(x_train):
-    
     cov = np.cov(x_train.T)
     cov = np.round(cov, 2)
-    
+
     eig_val, eig_vec = np.linalg.eig(cov)
-    
-    indices = np.arange(0,len(eig_val), 1)
-    indices = ([x for _,x in sorted(zip(eig_val, indices))])[::-1]
+
+    indices = np.arange(0, len(eig_val), 1)
+    indices = ([x for _, x in sorted(zip(eig_val, indices))])[::-1]
     eig_val = eig_val[indices]
-    eig_vec = eig_vec[:,indices]
-    
+    eig_vec = eig_vec[:, indices]
+
     sum_eig_val = np.sum(eig_val)
-    explained_variance = eig_val/ sum_eig_val
+    explained_variance = eig_val / sum_eig_val
     cumulative_variance = np.cumsum(explained_variance)
-    
+
     index = np.argmax(cumulative_variance > 0.95)
-    
+
     return indices, index
 
 
@@ -223,65 +221,65 @@ def build_poly(x, degree):
 
 
 def IntoPounds(x):
-    if x >= 9000 :
+    if x >= 9000:
         return int((x - 9000) * 2.20462)
     else:
-        return x 
+        return x
 
-    
+
 def IntoInches(x):
-    if x < 9000:          
-        return np.floor(x/100)*12 + (x % 100)
-    else: 
+    if x < 9000:
+        return np.floor(x / 100) * 12 + (x % 100)
+    else:
         return (x - 9000) * 0.393701
 
-    
+
 def WeekToMonth(x):
     x_str = str(x)
-    if x_str[0] == "1":       
-        return 4*int(x_str[-4:-2])
+    if x_str[0] == "1":
+        return 4 * int(x_str[-4:-2])
     elif x_str[0] == "2":
         return int(x_str[-4:-2])
-    else :
+    else:
         return x
-    
-    
+
+
 def DayToMonth(x):
     x_str = str(x)
-    if x_str[0] == "1":       
-        return 30 *int(x_str[-4:-2])
+    if x_str[0] == "1":
+        return 30 * int(x_str[-4:-2])
     elif x_str[0] == "2":
-        return 4*int(x_str[-4:-2])
+        return 4 * int(x_str[-4:-2])
     elif x_str[0] == "3":
         return int(x_str[-4:-2])
-    else :
+    else:
         return x
-    
-    
+
+
 def DayToYear(x):
     x_str = str(x)
-    if x_str[0] == "1":       
-        return 365 *int(x_str[-4:-2])
+    if x_str[0] == "1":
+        return 365 * int(x_str[-4:-2])
     elif x_str[0] == "2":
-        return 52*int(x_str[-4:-2])
+        return 52 * int(x_str[-4:-2])
     elif x_str[0] == "3":
         return 12 * int(x_str[-4:-2])
     elif x_str[0] == "4":
         return int(x_str[-4:-2])
     else:
-        return x 
-
-    
-def HourToMinutes(x):
-    x_str = str(x)
-    if len(x_str) == 4 :
-        return int(x_str[-4:-2])
-    elif len(x_str) == 5 :   
-        return int(x_str[0])*60 + int(x_str[-4:-2])
-    else: 
         return x
 
-    
+
+def HourToMinutes(x):
+    x_str = str(x)
+    if len(x_str) == 4:
+        return int(x_str[-4:-2])
+    elif len(x_str) == 5:
+        return int(x_str[0]) * 60 + int(x_str[-4:-2])
+    else:
+        return x
+
+
 "----------------------------------------------------------------------------------------------------------------------"
 """                                     Linear regression using gradient descent                                     """
 "----------------------------------------------------------------------------------------------------------------------"
@@ -300,7 +298,7 @@ def compute_loss_mse(y, tx, w):
     """
 
     e = y - np.dot(tx, w)
-    return (1/(2*len(y)))*np.dot(e.T, e)
+    return (1 / (2 * len(y))) * np.dot(e.T, e)
 
 
 def compute_gradient_mse(y, tx, w):
@@ -393,7 +391,7 @@ def least_squares(y, tx):
         w: optimal weights, numpy array of shape(M,).
         mse: scalar.
     """
-    
+
     a = tx.T.dot(tx)
     b = tx.T.dot(y)
     w = np.linalg.solve(a, b)
@@ -408,47 +406,45 @@ def least_squares(y, tx):
 
 def ridge_regression(y, tx, lambda_):
     """Args:
-        y: numpy array of shape (N,), N is the number of samples.
-        tx: numpy array of shape (N,D), D is the number of features
-        lambda_: scalar.
-       Returns:
-        w: optimal weights, numpy array of shape(D,), D is the number of features.
+     y: numpy array of shape (N,), N is the number of samples.
+     tx: numpy array of shape (N,D), D is the number of features
+     lambda_: scalar.
+    Returns:
+     w: optimal weights, numpy array of shape(D,), D is the number of features.
     """
     aI = 2 * tx.shape[0] * lambda_ * np.identity(tx.shape[1])
     a = tx.T.dot(tx) + aI
     b = tx.T.dot(y)
-    
+
     return np.linalg.solve(a, b)
 
 
-def ridge_regression_demo(x_tr, x_te, y_tr, y_te,lambdas,degrees) : 
-    
+def ridge_regression_demo(x_tr, x_te, y_tr, y_te, lambdas, degrees):
     best_lambdas = []
     best_rmses = []
-    
+
     for degree in degrees:
         rmse_te = []
-        
+
         tx_te = build_poly(x_te, degree)
         tx_tr = build_poly(x_tr, degree)
-        
-        
+
         for lam in lambdas:
             rmse_te_tmp = []
             weight = ridge_regression(y_tr, tx_tr, lam)
             rmse_te_tmp.append(np.sqrt(2 * compute_loss_mse(y_te, tx_te, weight)))
-                               
+
         rmse_te.append(np.mean(rmse_te_tmp))
-            
+
         ind_lambda_opt = np.argmin(rmse_te)
         best_lambdas.append(lambdas[ind_lambda_opt])
         best_rmses.append(rmse_te[ind_lambda_opt])
-        
+
     ind_best_degree = np.argmin(best_rmses)
     best_degree = degrees[ind_best_degree]
     best_lambda = best_lambdas[ind_best_degree]
     best_rmse = best_rmses[ind_best_degree]
-                               
+
     return best_degree, best_lambda, best_rmse
 
 
@@ -480,10 +476,10 @@ def calculate_loss(y, tx, w):
     """
     assert y.shape[0] == tx.shape[0]
     assert tx.shape[1] == w.shape[0]
-    
+
     sig = sigmoid(tx.dot(w))
-    matrix = y*np.log(sig) + (1 - y)*np.log(1 - sig)
-    loss = -(1/len(y))*np.sum(matrix)
+    matrix = y * np.log(sig) + (1 - y) * np.log(1 - sig)
+    loss = -(1 / len(y)) * np.sum(matrix)
 
     return loss
 
@@ -508,10 +504,10 @@ def calculate_gradient(y, tx, w):
            [ 0.2067104 ],
            [ 0.51712843]])
     """
-    
+
     sig = sigmoid(tx.dot(w))
     grad = tx.T.dot(sig - y) * (1 / y.shape[0])
-    
+
     return grad
 
 
@@ -534,31 +530,31 @@ def calculate_hessian(y, tx, w):
            [0.3861498 , 0.62182124, 0.85749269],
            [0.48268724, 0.85749269, 1.23229813]])
     """
-    
+
     sig = sigmoid(tx.dot(w))
     diag = np.diag(sig.T[0])
-    s = diag*(1-diag)
-    hessian = (1/len(y))*tx.T.dot(s.dot(tx))
-    
+    s = diag * (1 - diag)
+    hessian = (1 / len(y)) * tx.T.dot(s.dot(tx))
+
     return hessian
 
 
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
     """
-        Do gradient descent with Newton's method.
-        Return optimal w and loss.
+    Do gradient descent with Newton's method.
+    Return optimal w and loss.
 
-        Args:
-            y:  shape=(N, 1)
-            tx: shape=(N, D)
-            w:  shape=(D, 1)
-            gamma: scalar
+    Args:
+        y:  shape=(N, 1)
+        tx: shape=(N, D)
+        w:  shape=(D, 1)
+        gamma: scalar
 
-        Returns:
-            loss: scalar number
-            w: shape=(D, 1)
-        """
-    
+    Returns:
+        loss: scalar number
+        w: shape=(D, 1)
+    """
+
     threshold = 1e-8
     losses = []
 
@@ -567,13 +563,13 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     # start the logistic regression
     for iter in range(max_iters):
         # get loss and update w.
-        
+
         loss = calculate_loss(y, tx, w)
         grad = calculate_gradient(y, tx, w)
         hessian = calculate_hessian(y, tx, w)
-        
+
         w = w - gamma * np.linalg.solve(hessian, grad)
-        
+
         # log info
         if iter % 100 == 0:
             print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
@@ -581,30 +577,30 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
         losses.append(loss)
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
             break
-    
+
     loss = calculate_loss(y, tx, w)
     print("loss={l}".format(l=loss))
-    
+
     return w, loss
 
 
-def reg_logistic_regression(y, tx, lambda_ , initial_w, max_iters, gamma):
+def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     """
-        Do gradient descent, using the penalized logistic regression.
-        Return the optimal w and loss.
+    Do gradient descent, using the penalized logistic regression.
+    Return the optimal w and loss.
 
-        Args:
-            y:  shape=(N, 1)
-            tx: shape=(N, D)
-            w:  shape=(D, 1)
-            gamma: scalar
-            lambda_: scalar
+    Args:
+        y:  shape=(N, 1)
+        tx: shape=(N, D)
+        w:  shape=(D, 1)
+        gamma: scalar
+        lambda_: scalar
 
-        Returns:
-            loss: scalar number
-            w: shape=(D, 1)
-        """
-    
+    Returns:
+        loss: scalar number
+        w: shape=(D, 1)
+    """
+
     threshold = 1e-8
     losses = []
 
@@ -613,11 +609,11 @@ def reg_logistic_regression(y, tx, lambda_ , initial_w, max_iters, gamma):
     # start the logistic regression
     for iter in range(max_iters):
         # get loss and update w.
-        
+
         loss = calculate_loss(y, tx, w) + lambda_ * np.squeeze(w.T.dot(w))
         grad = calculate_gradient(y, tx, w) + 2 * lambda_ * w
         w = w - gamma * grad
-        
+
         # log info
         if iter % 100 == 0:
             print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
@@ -625,8 +621,8 @@ def reg_logistic_regression(y, tx, lambda_ , initial_w, max_iters, gamma):
         losses.append(loss)
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
             break
-    
+
     loss = calculate_loss(y, tx, w)
     print("loss={l}".format(l=loss))
-    
+
     return w, loss
