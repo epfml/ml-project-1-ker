@@ -322,6 +322,7 @@ def least_squares(y, tx):
 """                              Logistic Regression                                                                 """
 "----------------------------------------------------------------------------------------------------------------------"
 
+
 def sigmoid(t):
     return 1.0 / (1 + np.exp(-t))
 
@@ -376,6 +377,7 @@ def logistic_gradient_descent(y,tx,initial_w,gamma,max_iters):
 
     loss = calculate_loss(y, tx, w)
     return w, loss
+
 
 def regd_logistic_regression(X, y, lr=0.01, max_iter=1000, fit_intercept=True, lambda_=0.1, verbose=False):
     if fit_intercept:
