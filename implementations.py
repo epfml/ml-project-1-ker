@@ -552,7 +552,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     w = initial_w
 
     # start the logistic regression
-    for iter in range(max_iter):
+    for iter in range(max_iters):
         # get loss and update w.
         
         loss = calculate_loss(y, tx, w)
@@ -572,7 +572,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     loss = calculate_loss(y, tx, w)
     print("loss={l}".format(l=loss))
     
-    return w, loss_end
+    return w, loss
 
 
 def reg_logistic_regression(y, tx, lambda_ , initial_w, max_iters, gamma):
@@ -583,7 +583,7 @@ def reg_logistic_regression(y, tx, lambda_ , initial_w, max_iters, gamma):
     w = initial_w
 
     # start the logistic regression
-    for iter in range(max_iter):
+    for iter in range(max_iters):
         # get loss and update w.
         
         loss = calculate_loss(y, tx, w) + lambda_ * np.squeeze(w.T.dot(w))
@@ -601,4 +601,4 @@ def reg_logistic_regression(y, tx, lambda_ , initial_w, max_iters, gamma):
     loss = calculate_loss(y, tx, w)
     print("loss={l}".format(l=loss))
     
-    return w, loss_end
+    return w, loss
