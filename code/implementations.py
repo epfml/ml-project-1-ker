@@ -1,6 +1,5 @@
 import csv
 import numpy as np
-from plots import visualization
 import os as os
 
 
@@ -478,8 +477,9 @@ def calculate_loss(y, tx, w):
 
     pred = sigmoid(tx.dot(w))
     loss = y.T.dot(np.log(pred)) + (1 - y).T.dot(np.log(1 - pred))
-    return np.squeeze(-loss).item() * (1 / y.shape[0])
-
+    return_loss = np.squeeze(-loss).item() * (1 / y.shape[0])
+    print(f"return loss{return_loss}")
+    return return_loss
 
 def calculate_gradient(y, tx, w):
     """compute the gradient of loss.
@@ -494,6 +494,7 @@ def calculate_gradient(y, tx, w):
 
     """
     pred = sigmoid(tx.dot(w))
+    print(f"pred {pred}")
     grad = tx.T.dot(pred - y) * (1 / y.shape[0])
     return grad
 
