@@ -105,7 +105,6 @@ def cross(data_cleaned, pred, ratio):
     
     return tx_tr, tx_te, y_tr, y_te
 
-
 def standardize(x):
     """Standardize the original data set."""
     mean_x = np.mean(x)
@@ -171,7 +170,6 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
-
 def replace(arr, old_values, new_values):
     
     result = arr.copy()
@@ -230,14 +228,14 @@ def IntoPounds(x):
     else:
         return x 
 
-
+    
 def IntoInches(x):
     if x < 9000:          
         return np.floor(x/100)*12 + (x % 100)
     else: 
         return (x - 9000) * 0.393701
 
-
+    
 def WeekToMonth(x):
     x_str = str(x)
     if x_str[0] == "1":       
@@ -273,7 +271,7 @@ def DayToYear(x):
     else:
         return x 
 
-
+    
 def HourToMinutes(x):
     x_str = str(x)
     if len(x_str) == 4 :
@@ -283,7 +281,7 @@ def HourToMinutes(x):
     else: 
         return x
 
-
+    
 "----------------------------------------------------------------------------------------------------------------------"
 """                                     Linear regression using gradient descent                                     """
 "----------------------------------------------------------------------------------------------------------------------"
@@ -407,6 +405,7 @@ def least_squares(y, tx):
 """                                      Ridge regression using normal equations                                     """
 "----------------------------------------------------------------------------------------------------------------------"
 
+
 def ridge_regression(y, tx, lambda_):
     """Args:
         y: numpy array of shape (N,), N is the number of samples.
@@ -420,6 +419,7 @@ def ridge_regression(y, tx, lambda_):
     b = tx.T.dot(y)
     
     return np.linalg.solve(a, b)
+
 
 def ridge_regression_demo(x_tr, x_te, y_tr, y_te,lambdas,degrees) : 
     
@@ -530,5 +530,5 @@ def regd_logistic_regression(X, y, lr=0.01, max_iter=1000, fit_intercept=True, l
             z = np.dot(X, theta)
             h = 1 / (1 + np.exp(-z))
             print(f'loss: {(-y * np.log(h) - (1 - y) * np.log(1 - h)).mean()} \t')
-
+    
     return theta

@@ -51,6 +51,7 @@ def load_csv_data(data_path, sub_sample=False):
 
     return x_train, x_test, y_train, train_ids, test_ids
 
+
 def create_csv_submission(ids, y_pred, name):
     """
     This function creates a csv file named 'name' in the format required for a submission in Kaggle or AIcrowd.
@@ -215,9 +216,11 @@ def build_poly(x, degree):
         poly = np.c_[poly, np.power(x, deg)]
     return poly
 
+
 "----------------------------------------------------------------------------------------------------------------------"
 """                                        Conversion metrics functions                                              """
 "----------------------------------------------------------------------------------------------------------------------"
+
 
 def IntoPounds(x):
     if x >= 9000 :
@@ -225,12 +228,14 @@ def IntoPounds(x):
     else:
         return x 
 
+    
 def IntoInches(x):
     if x < 9000:          
         return np.floor(x/100)*12 + (x % 100)
     else: 
         return (x - 9000) * 0.393701
 
+    
 def WeekToMonth(x):
     x_str = str(x)
     if x_str[0] == "1":       
@@ -266,6 +271,7 @@ def DayToYear(x):
     else:
         return x 
 
+    
 def HourToMinutes(x):
     x_str = str(x)
     if len(x_str) == 4 :
@@ -275,6 +281,7 @@ def HourToMinutes(x):
     else: 
         return x
 
+    
 "----------------------------------------------------------------------------------------------------------------------"
 """                                     Linear regression using gradient descent                                     """
 "----------------------------------------------------------------------------------------------------------------------"
@@ -393,9 +400,11 @@ def least_squares(y, tx):
     loss = compute_loss_mse(y, tx, w)
     return w, loss
 
+
 "----------------------------------------------------------------------------------------------------------------------"
 """                                      Ridge regression using normal equations                                     """
 "----------------------------------------------------------------------------------------------------------------------"
+
 
 def ridge_regression(y, tx, lambda_):
     """Args:
@@ -410,6 +419,7 @@ def ridge_regression(y, tx, lambda_):
     b = tx.T.dot(y)
     
     return np.linalg.solve(a, b)
+
 
 def ridge_regression_demo(x_tr, x_te, y_tr, y_te,lambdas,degrees) : 
     
@@ -440,6 +450,7 @@ def ridge_regression_demo(x_tr, x_te, y_tr, y_te,lambdas,degrees) :
     best_rmse = best_rmses[ind_best_degree]
                                
     return best_degree, best_lambda, best_rmse
+
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                              Logistic Regression                                                                 """
