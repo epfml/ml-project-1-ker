@@ -543,8 +543,21 @@ def calculate_hessian(y, tx, w):
     return hessian
 
 
-
 def logistic_regression(y, tx, initial_w, max_iters, gamma):
+    """
+        Do gradient descent with Newton's method.
+        Return optimal w and loss.
+
+        Args:
+            y:  shape=(N, 1)
+            tx: shape=(N, D)
+            w:  shape=(D, 1)
+            gamma: scalar
+
+        Returns:
+            loss: scalar number
+            w: shape=(D, 1)
+        """
     
     threshold = 1e-8
     losses = []
@@ -576,6 +589,21 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 
 
 def reg_logistic_regression(y, tx, lambda_ , initial_w, max_iters, gamma):
+    """
+        Do gradient descent, using the penalized logistic regression.
+        Return the optimal w and loss.
+
+        Args:
+            y:  shape=(N, 1)
+            tx: shape=(N, D)
+            w:  shape=(D, 1)
+            gamma: scalar
+            lambda_: scalar
+
+        Returns:
+            loss: scalar number
+            w: shape=(D, 1)
+        """
     
     threshold = 1e-8
     losses = []
