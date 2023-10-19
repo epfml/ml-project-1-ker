@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+from plots import visualization
 import os as os
 
 
@@ -50,6 +51,7 @@ def load_csv_data(data_path, sub_sample=False):
         train_ids = train_ids[::50]
 
     return x_train, x_test, y_train, train_ids, test_ids
+
 
 def create_csv_submission(ids, y_pred, name):
     """
@@ -199,6 +201,88 @@ def pca(x_train):
     return indices, index
 
 
+def build_poly(x, degree):
+    """polynomial basis functions for input data x, for j=0 up to j=degree.
+    Args:
+        x: numpy array of shape (N,), N is the number of samples.
+        degree: integer.
+    Returns:
+        poly: numpy array of shape (N,d+1)
+    >>> build_poly(np.array([0.0, 1.5]), 2)
+    array([[1.  , 0.  , 0.  ],
+           [1.  , 1.5 , 2.25]])
+    """
+    poly = np.ones((len(x), 1))
+    for deg in range(1, degree + 1):
+        poly = np.c_[poly, np.power(x, deg)]
+    return poly
+
+
+"----------------------------------------------------------------------------------------------------------------------"
+"""                                        Conversion metrics functions                                              """
+"----------------------------------------------------------------------------------------------------------------------"
+
+
+def IntoPounds(x):
+    if x >= 9000 :
+        return int((x - 9000) * 2.20462)
+    else:
+        return x 
+
+    
+def IntoInches(x):
+    if x < 9000:          
+        return np.floor(x/100)*12 + (x % 100)
+    else: 
+        return (x - 9000) * 0.393701
+
+    
+def WeekToMonth(x):
+    x_str = str(x)
+    if x_str[0] == "1":       
+        return 4*int(x_str[-4:-2])
+    elif x_str[0] == "2":
+        return int(x_str[-4:-2])
+    else :
+        return x
+    
+    
+def DayToMonth(x):
+    x_str = str(x)
+    if x_str[0] == "1":       
+        return 30 *int(x_str[-4:-2])
+    elif x_str[0] == "2":
+        return 4*int(x_str[-4:-2])
+    elif x_str[0] == "3":
+        return int(x_str[-4:-2])
+    else :
+        return x
+    
+    
+def DayToYear(x):
+    x_str = str(x)
+    if x_str[0] == "1":       
+        return 365 *int(x_str[-4:-2])
+    elif x_str[0] == "2":
+        return 52*int(x_str[-4:-2])
+    elif x_str[0] == "3":
+        return 12 * int(x_str[-4:-2])
+    elif x_str[0] == "4":
+        return int(x_str[-4:-2])
+    else:
+        return x 
+
+    
+def HourToMinutes(x):
+    x_str = str(x)
+    if len(x_str) == 4 :
+        return int(x_str[-4:-2])
+    elif len(x_str) == 5 :   
+        return int(x_str[0])*60 + int(x_str[-4:-2])
+    else: 
+        return x
+
+    
 "----------------------------------------------------------------------------------------------------------------------"
 """                                     Linear regression using gradient descent                                     """
 "----------------------------------------------------------------------------------------------------------------------"
@@ -319,8 +403,60 @@ def least_squares(y, tx):
 
 
 "----------------------------------------------------------------------------------------------------------------------"
+"""                                      Ridge regression using normal equations                                     """
+"----------------------------------------------------------------------------------------------------------------------"
+
+
+def ridge_regression(y, tx, lambda_):
+    """Args:
+        y: numpy array of shape (N,), N is the number of samples.
+        tx: numpy array of shape (N,D), D is the number of features
+        lambda_: scalar.
+       Returns:
+        w: optimal weights, numpy array of shape(D,), D is the number of features.
+    """
+    aI = 2 * tx.shape[0] * lambda_ * np.identity(tx.shape[1])
+    a = tx.T.dot(tx) + aI
+    b = tx.T.dot(y)
+    
+    return np.linalg.solve(a, b)
+
+
+def ridge_regression_demo(x_tr, x_te, y_tr, y_te,lambdas,degrees) : 
+    
+    best_lambdas = []
+    best_rmses = []
+    
+    for degree in degrees:
+        rmse_te = []
+        
+        tx_te = build_poly(x_te, degree)
+        tx_tr = build_poly(x_tr, degree)
+        
+        
+        for lam in lambdas:
+            rmse_te_tmp = []
+            weight = ridge_regression(y_tr, tx_tr, lam)
+            rmse_te_tmp.append(np.sqrt(2 * compute_loss_mse(y_te, tx_te, weight)))
+                               
+        rmse_te.append(np.mean(rmse_te_tmp))
+            
+        ind_lambda_opt = np.argmin(rmse_te)
+        best_lambdas.append(lambdas[ind_lambda_opt])
+        best_rmses.append(rmse_te[ind_lambda_opt])
+        
+    ind_best_degree = np.argmin(best_rmses)
+    best_degree = degrees[ind_best_degree]
+    best_lambda = best_lambdas[ind_best_degree]
+    best_rmse = best_rmses[ind_best_degree]
+                               
+    return best_degree, best_lambda, best_rmse
+
+
+"----------------------------------------------------------------------------------------------------------------------"
 """                              Logistic Regression                                                                 """
 "----------------------------------------------------------------------------------------------------------------------"
+
 
 def sigmoid(t):
     return 1.0 / (1 + np.exp(-t))
@@ -376,6 +512,16 @@ def logistic_gradient_descent(y,tx,initial_w,gamma,max_iters):
 
     loss = calculate_loss(y, tx, w)
     return w, loss
+
+
+
+
+
+def penalized_logistic_regression(y, tx, w, lambda_):
+    
+    loss = calculate_loss(y, tx, w) + lambda_ * np.squeeze(w.T.dot(w))
+    gradient = calculate_gradient(y, tx, w) + 2 * lambda_ * w
+    return loss, gradient
 
 def regd_logistic_regression(X, y, lr=0.01, max_iter=1000, fit_intercept=True, lambda_=0.1, verbose=False):
     if fit_intercept:
