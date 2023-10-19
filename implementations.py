@@ -87,9 +87,7 @@ def gen_clean(raw_data):
     data = data[:, indices]
     data = np.squeeze(data, axis=1)
 
-    data_cleaned = data[:, 9:]
-
-    return data_cleaned, indices
+    return data, indices
 
 
 def cross(data_cleaned, pred, ratio):
