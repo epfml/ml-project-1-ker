@@ -529,7 +529,8 @@ def calculate_hessian(y, tx, w):
            [0.48268724, 0.85749269, 1.23229813]])
     """
 
-    sig = sigmoid(tx.dot(w))
+    sig = sigmoid(tx.dot(w)).reshape(-1,1)
+    print(sig.shape)
     diag = np.diag(sig.T[0])
     s = diag * (1 - diag)
     hessian = (1 / len(y)) * tx.T.dot(s.dot(tx))
