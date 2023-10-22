@@ -581,9 +581,9 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     return w, loss
 
 
-def logistic_regression_demo(x_tr, x_te, y_tr, y_te, gammas, degrees,max_iters,initial_w):
+def logistic_regression_demo(x_tr, x_te, y_tr, y_te, gammas, degrees,max_iters):
     best_gammas = []
-    best_rmses = []
+    best_losses = []
     
 
     for degree in degrees:
@@ -595,24 +595,24 @@ def logistic_regression_demo(x_tr, x_te, y_tr, y_te, gammas, degrees,max_iters,i
         initial_w = np.zeros(tx_tr.shape[1])
 
         for gamma in gammas:
-            rmse_te_tmp = []
+            loss_te_tmp = []
             weight, loss = logistic_regression(y_tr, tx_tr, initial_w, max_iters, gamma)
-            rmse_te_tmp.append(loss)
+            loss_te_tmp.append(loss)
 
-        rmse_te.append(np.mean(rmse_te_tmp))
+        rmse_te.append(np.mean(loss_te_tmp))
 
         ind_lambda_opt = np.argmin(rmse_te)
         best_gammas.append(gammas[ind_lambda_opt])
-        best_rmses.append(rmse_te[ind_lambda_opt])
+        best_losses.append(rmse_te[ind_lambda_opt])
         
         print("Degree :",degree," done")
 
-    ind_best_degree = np.argmin(best_rmses)
+    ind_best_degree = np.argmin(best_losses)
     best_degree = degrees[ind_best_degree]
     best_gamma = best_gammas[ind_best_degree]
-    best_rmse = best_rmses[ind_best_degree]
+    best_loss = best_losses[ind_best_degree]
 
-    return best_degree, best_lambda, best_rmse
+    return best_degree, best_gamma, best_loss
 
 
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
