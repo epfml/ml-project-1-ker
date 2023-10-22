@@ -472,9 +472,10 @@ def calculate_loss(y, tx, w):
     >>> round(calculate_loss(y, tx, w), 8)
     1.52429481
     """
+    
     assert y.shape[0] == tx.shape[0]
     assert tx.shape[1] == w.shape[0]
-
+    
     sig = sigmoid(tx.dot(w))
     matrix = y * np.log(sig) + (1 - y) * np.log(1 - sig)
     loss = -(1 / len(y)) * np.sum(matrix)
@@ -531,9 +532,7 @@ def calculate_hessian(y, tx, w):
 
     sig = sigmoid(tx.dot(w)).reshape(-1,1)
     diag = np.diag(sig.T[0])
-    print("Multiply")
     s = np.multiply(diag, (1 - diag))
-    print("Last calc go")
     hessian = (1 / y.shape[0]) * tx.T.dot(s.dot(tx))
     
     return hessian
@@ -566,24 +565,54 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 
         loss = calculate_loss(y, tx, w)
         grad = calculate_gradient(y, tx, w)
-        hessian = calculate_hessian(y, tx, w)
-        print("Hessian done")
 
-        w = w - gamma * np.linalg.solve(hessian, grad)
-        print("Weights updated")
+        w = w - gamma * grad
         
         # log info
-        if iter % 100 == 0:
-            print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
+        #if iter % 100 == 0:
+        #    print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
             break
 
     loss = calculate_loss(y, tx, w)
-    print("loss={l}".format(l=loss))
 
     return w, loss
+
+
+def logistic_regression_demo(x_tr, x_te, y_tr, y_te, gammas, degrees,max_iters,initial_w):
+    best_gammas = []
+    best_rmses = []
+    
+
+    for degree in degrees:
+        rmse_te = []
+
+        tx_te = build_poly(x_te, degree)
+        tx_tr = build_poly(x_tr, degree)
+        
+        initial_w = np.zeros(tx_tr.shape[1])
+
+        for gamma in gammas:
+            rmse_te_tmp = []
+            weight, loss = logistic_regression(y_tr, tx_tr, initial_w, max_iters, gamma)
+            rmse_te_tmp.append(loss)
+
+        rmse_te.append(np.mean(rmse_te_tmp))
+
+        ind_lambda_opt = np.argmin(rmse_te)
+        best_gammas.append(gammas[ind_lambda_opt])
+        best_rmses.append(rmse_te[ind_lambda_opt])
+        
+        print("Degree :",degree," done")
+
+    ind_best_degree = np.argmin(best_rmses)
+    best_degree = degrees[ind_best_degree]
+    best_gamma = best_gammas[ind_best_degree]
+    best_rmse = best_rmses[ind_best_degree]
+
+    return best_degree, best_lambda, best_rmse
 
 
 def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
