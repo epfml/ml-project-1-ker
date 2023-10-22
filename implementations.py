@@ -530,11 +530,12 @@ def calculate_hessian(y, tx, w):
     """
 
     sig = sigmoid(tx.dot(w)).reshape(-1,1)
-    print(sig.shape)
     diag = np.diag(sig.T[0])
-    s = diag * (1 - diag)
-    hessian = (1 / len(y)) * tx.T.dot(s.dot(tx))
-
+    print("Multiply")
+    s = np.multiply(diag, (1 - diag))
+    print("Last calc go")
+    hessian = (1 / y.shape[0]) * tx.T.dot(s.dot(tx))
+    
     return hessian
 
 
@@ -566,9 +567,11 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
         loss = calculate_loss(y, tx, w)
         grad = calculate_gradient(y, tx, w)
         hessian = calculate_hessian(y, tx, w)
+        print("Hessian done")
 
         w = w - gamma * np.linalg.solve(hessian, grad)
-
+        print("Weights updated")
+        
         # log info
         if iter % 100 == 0:
             print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
