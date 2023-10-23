@@ -191,7 +191,7 @@ def pca(x_train):
     explained_variance = eig_val / sum_eig_val
     cumulative_variance = np.cumsum(explained_variance)
 
-    index = np.argmax(cumulative_variance > 0.95)
+    index = np.argmax(cumulative_variance > 0.99)
 
     return indices, index
 
@@ -581,7 +581,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     return w, loss
 
 
-def logistic_regression_demo(x_tr, x_te, y_tr, y_te, gammas, degrees,max_iters):
+def logistic_regression_demo(x_tr, x_te, y_tr, y_te, gammas, degrees, max_iters):
     best_gammas = []
     best_losses = []
     
