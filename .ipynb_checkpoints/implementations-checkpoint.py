@@ -524,7 +524,8 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
         
         print(f"Degree {degree} done !")
 
-    best_degree = np.argmin(best_rmses)
+    ind_best_degree = np.argmin(best_rmses)
+    best_degree = degrees[ind_best_degree]
     best_lambda = best_lambdas[best_degree]
     best_rmse = best_rmses[best_degree]
 
