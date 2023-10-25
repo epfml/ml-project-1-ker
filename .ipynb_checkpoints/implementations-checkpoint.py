@@ -322,7 +322,7 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
 
     Args:
         y: numpy array of shape=(N, )
-        tx: numpy array of shape=(N,M)
+        tx: numpy array of shape=(N, M)
         initial_w: numpy array of shape=(M, ). The initial guess (or the initialization) for the model parameters
         max_iters: a scalar denoting the total number of iterations of GD
         gamma: a scalar denoting the stepsize
@@ -332,15 +332,21 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         ws: a list of length max_iters containing the model parameters as numpy arrays of shape (M, ),
             for each iteration of GD
     """
-    # Define parameters to store w and loss
-    loss = 0
-    w = initial_w
-    # Gradient descent
+    losses = []  # List to store loss values
+    ws = []  # List to store model parameters
+    
+    w = initial_w  # Initialize model parameters
+
     for n_iter in range(max_iters):
-        loss = compute_loss_mse(y, tx, w)
-        grad = compute_gradient_mse(y, tx, w)
-        w = w - gamma * grad
-    return w, loss
+        loss = compute_loss_mse(y, tx, w)  # Compute the loss
+        grad = compute_gradient_mse(y, tx, w)  # Compute the gradient
+        w = w - gamma * grad  # Update the model parameters
+
+        losses.append(loss)  # Append the loss to the list
+        ws.append(w)  # Append the model parameters to the list
+
+    return losses, ws
+
 
 
 "----------------------------------------------------------------------------------------------------------------------"
