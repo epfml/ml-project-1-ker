@@ -485,7 +485,7 @@ def cross_validation(y, x, k_indices, k, lambda_, degree):
     tx_tr = build_poly(x_tr, degree)
     tx_te = build_poly(x_te, degree)
     
-    w = ridge_regression(y_tr, tx_tr, lambda_)
+    w, loss = ridge_regression(y_tr, tx_tr, lambda_)
     
     loss_tr = np.sqrt(2 * compute_loss_mse(y_tr, tx_tr, w))
     loss_te = np.sqrt(2 * compute_loss_mse(y_te, tx_te, w))
