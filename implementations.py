@@ -77,22 +77,16 @@ def create_csv_submission(ids, y_pred, name):
 
 def gen_clean(raw_data, feat_cat, feat_con):
     data = np.ones(raw_data.shape)
-    stds = np.array([])
     
     for i in feat_con:
         d, std = standardize_clean(raw_data[:, i])
         data[:, i] = d
-        stds = np.append(stds, std)
         
     for i in feat_cat:
         d = clean_cat(raw_data[:, i])
         data[:, i] = d
 
-    indices = np.where(stds != 0)
-    data = data[:, indices]
-    data = np.squeeze(data, axis=1)
-
-    return data, indices
+    return data
 
 
 def cross(data_cleaned, pred, ratio):
