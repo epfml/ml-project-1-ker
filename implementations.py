@@ -79,11 +79,11 @@ def gen_clean(raw_data, feat_cat, feat_con):
     data = np.ones(raw_data.shape)
     
     for i in feat_con:
-        d, std = standardize_clean(raw_data[:, i])
+        d, std = standardize_clean(raw_data[:, i], False)
         data[:, i] = d
         
     for i in feat_cat:
-        d = clean_cat(raw_data[:, i])
+        d, std = standardize_clean(raw_data[:, i], True)
         data[:, i] = d
 
     return data
@@ -101,7 +101,7 @@ def cross(data_cleaned, pred, ratio):
     return tx_tr, tx_te, y_tr, y_te
 
 
-def standardize_clean(x):
+def standardize_clean(x, categorical=True):
     """
     Replace NaN values in a feature with the median of the non-NaN values.
 
@@ -114,30 +114,18 @@ def standardize_clean(x):
     nan_indices = np.isnan(x)
     non_nan_values = x[~nan_indices]  # Get non-NaN values
     median_x = np.median(non_nan_values)
-    x[nan_indices] = median_x
+    
+    if categorical: 
+        x[nan_indices] = -1
+        
+    if (not categorical):
+        x[nan_indices] = median_x
 
     x = x - median_x
     std_x = np.std(x[~nan_indices])
     if std_x != 0:
         x = x / std_x
     return x, std_x
-
-
-def clean_cat(x):
-    """
-    Replace NaN values in a categorical feature with -1.
-
-    Args:
-        x (numpy.ndarray): 1D array representing a feature.
-
-    Returns:
-        numpy.ndarray: 1D array with NaN values replaced by -1.
-    """
-    nan_indices = np.isnan(x)
-    non_nan_values = x[~nan_indices]  # Get non-NaN values
-    x[nan_indices] = -1
-
-    return x
 
 
 def build_model_data(data, pred):
@@ -527,6 +515,8 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
         best_indice = np.argmin(rmse_te)
         best_lambdas.append(lambdas[best_indice])
         best_rmses.append(rmse_te[best_indice])
+        
+        print(f"Degree {degree} done !")
 
     best_degree = np.argmin(best_rmses)
     best_lambda = best_lambdas[best_degree]

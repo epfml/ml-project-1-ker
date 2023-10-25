@@ -79,11 +79,11 @@ def gen_clean(raw_data, feat_cat, feat_con):
     data = np.ones(raw_data.shape)
     
     for i in feat_con:
-        d, std = standardize_clean(raw_data[:, i])
+        d, std = standardize_clean(raw_data[:, i], False)
         data[:, i] = d
         
     for i in feat_cat:
-        d = clean_cat(raw_data[:, i])
+        d, std = standardize_clean(raw_data[:, i], True)
         data[:, i] = d
 
     return data
@@ -101,7 +101,7 @@ def cross(data_cleaned, pred, ratio):
     return tx_tr, tx_te, y_tr, y_te
 
 
-def standardize_clean(x):
+def standardize_clean(x, categorical=True):
     """
     Replace NaN values in a feature with the median of the non-NaN values.
 
@@ -114,30 +114,18 @@ def standardize_clean(x):
     nan_indices = np.isnan(x)
     non_nan_values = x[~nan_indices]  # Get non-NaN values
     median_x = np.median(non_nan_values)
-    x[nan_indices] = median_x
+    
+    if categorical: 
+        x[nan_indices] = -1
+        
+    if (not categorical):
+        x[nan_indices] = median_x
 
     x = x - median_x
     std_x = np.std(x[~nan_indices])
     if std_x != 0:
         x = x / std_x
     return x, std_x
-
-
-def clean_cat(x):
-    """
-    Replace NaN values in a categorical feature with -1.
-
-    Args:
-        x (numpy.ndarray): 1D array representing a feature.
-
-    Returns:
-        numpy.ndarray: 1D array with NaN values replaced by -1.
-    """
-    nan_indices = np.isnan(x)
-    non_nan_values = x[~nan_indices]  # Get non-NaN values
-    x[nan_indices] = -1
-
-    return x
 
 
 def build_model_data(data, pred):
@@ -205,19 +193,24 @@ def pca(x_train):
 
 def build_poly(x, degree):
     """polynomial basis functions for input data x, for j=0 up to j=degree.
+
     Args:
         x: numpy array of shape (N,), N is the number of samples.
         degree: integer.
+
     Returns:
         poly: numpy array of shape (N,d+1)
+
     >>> build_poly(np.array([0.0, 1.5]), 2)
     array([[1.  , 0.  , 0.  ],
            [1.  , 1.5 , 2.25]])
     """
-    poly = np.ones((len(x), 1))
-    for deg in range(1, degree + 1):
-        poly = np.c_[poly, np.power(x, deg)]
-    return poly
+    x_poly = np.ones((len(x), 1))
+    for i in range(1, degree + 1):
+        x_pow = x ** i
+        x_poly = np.c_[x_poly, x_pow]
+
+    return x_poly
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -361,7 +354,6 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
         y: shape=(N, )
         tx: shape=(N,M)
         initial_w: shape=(M, ). The initial guess (or the initialization) for the model parameters
-        batch_size: a scalar denoting the number of data points in a mini-batch used for computing the stochastic gradient
         max_iters: a scalar denoting the total number of iterations of SGD
         gamma: a scalar denoting the stepsize
     Returns:
@@ -410,47 +402,26 @@ def least_squares(y, tx):
 
 
 def ridge_regression(y, tx, lambda_):
-    """Args:
-     y: numpy array of shape (N,), N is the number of samples.
-     tx: numpy array of shape (N,D), D is the number of features
-     lambda_: scalar.
+    """implement ridge regression.
+
+    Args:
+        y: numpy array of shape (N,), N is the number of samples.
+        tx: numpy array of shape (N,D), D is the number of features.
+        lambda_: scalar.
+
     Returns:
-     w: optimal weights, numpy array of shape(D,), D is the number of features.
+        w: optimal weights, numpy array of shape(D,), D is the number of features.
+
+    >>> ridge_regression(np.array([0.1,0.2]), np.array([[2.3, 3.2], [1., 0.1]]), 0)
+    array([ 0.21212121, -0.12121212])
+    >>> ridge_regression(np.array([0.1,0.2]), np.array([[2.3, 3.2], [1., 0.1]]), 1)
+    array([0.03947092, 0.00319628])
     """
-    aI = 2 * tx.shape[0] * lambda_ * np.identity(tx.shape[1])
-    a = tx.T.dot(tx) + aI
+    a = tx.T.dot(tx) + 2 * tx.shape[0] * lambda_ * np.eye(tx.shape[1])
     b = tx.T.dot(y)
+    w = np.linalg.solve(a, b)
 
-    return np.linalg.solve(a, b)
-
-
-def ridge_regression_demo(x_tr, x_te, y_tr, y_te, lambdas, degrees):
-    best_lambdas = []
-    best_rmses = []
-
-    for degree in degrees:
-        rmse_te = []
-
-        tx_te = build_poly(x_te, degree)
-        tx_tr = build_poly(x_tr, degree)
-
-        for lam in lambdas:
-            rmse_te_tmp = []
-            weight = ridge_regression(y_tr, tx_tr, lam)
-            rmse_te_tmp.append(np.sqrt(2 * compute_loss_mse(y_te, tx_te, weight)))
-
-        rmse_te.append(np.mean(rmse_te_tmp))
-
-        ind_lambda_opt = np.argmin(rmse_te)
-        best_lambdas.append(lambdas[ind_lambda_opt])
-        best_rmses.append(rmse_te[ind_lambda_opt])
-
-    ind_best_degree = np.argmin(best_rmses)
-    best_degree = degrees[ind_best_degree]
-    best_lambda = best_lambdas[ind_best_degree]
-    best_rmse = best_rmses[ind_best_degree]
-
-    return best_degree, best_lambda, best_rmse
+    return w
 
 
 def build_k_indices(y, k_fold, seed):
@@ -507,9 +478,51 @@ def cross_validation(y, x, k_indices, k, lambda_, degree):
     
     w = ridge_regression(y_tr, tx_tr, lambda_)
     
-    loss_tr = np.sqrt(2 * compute_mse(y_tr, tx_tr, w))
-    loss_te = np.sqrt(2 * compute_mse(y_te, tx_te, w))
+    loss_tr = np.sqrt(2 * compute_loss_mse(y_tr, tx_tr, w))
+    loss_te = np.sqrt(2 * compute_loss_mse(y_te, tx_te, w))
     return loss_tr, loss_te
+
+
+def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
+    """cross validation over regularisation parameter lambda and degree.
+
+    Args:
+        degrees: shape = (d,), where d is the number of degrees to test
+        k_fold: integer, the number of folds
+        lambdas: shape = (p, ) where p is the number of values of lambda to test
+    Returns:
+        best_degree : integer, value of the best degree
+        best_lambda : scalar, value of the best lambda
+        best_rmse : value of the rmse for the couple (best_degree, best_lambda)
+
+    >>> best_degree_selection(np.arange(2,11), 4, np.logspace(-4, 0, 30))
+    (7, 0.004520353656360241, 0.28957280566456634)
+    """
+
+    # split data in k fold
+    k_indices = build_k_indices(y, k_fold, seed)
+
+    best_lambdas = []
+    best_rmses = []
+    for degree in degrees:
+        rmse_te = []
+        for lambda_ in lambdas:
+            rmse_te_temp = []
+            for k in range(k_fold):
+                _, loss_te = cross_validation(y, x, k_indices, k, lambda_, degree)
+                rmse_te_temp.append(loss_te)
+            rmse_te.append(np.mean(rmse_te_temp))
+        best_indice = np.argmin(rmse_te)
+        best_lambdas.append(lambdas[best_indice])
+        best_rmses.append(rmse_te[best_indice])
+        
+        print(f"Degree {degree} done !")
+
+    best_degree = np.argmin(best_rmses)
+    best_lambda = best_lambdas[best_degree]
+    best_rmse = best_rmses[best_degree]
+
+    return best_degree, best_lambda, best_rmse
 
 
 "----------------------------------------------------------------------------------------------------------------------"
