@@ -332,6 +332,10 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         ws: a list of length max_iters containing the model parameters as numpy arrays of shape (M, ),
             for each iteration of GD
     """
+    print(f"GAMMA = {gamma}")
+    print(f"Initial w = {initial_w}")
+    print(f"Max iters = {max_iters}")
+    
     losses = []  # List to store loss values
     ws = []  # List to store model parameters
     
