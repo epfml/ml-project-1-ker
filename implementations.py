@@ -284,19 +284,20 @@ def HourToMinutes(x):
 
 
 def compute_loss_mse(y, tx, w):
-    """Calculate the loss using MSE.
-
+    """compute the loss by mse.
     Args:
-        y: numpy array of shape=(N, )
-        tx: numpy array of shape=(N,M)
-        w: numpy array of shape=(M,). The vector of model parameters.
-
+        y: numpy array of shape (N,), N is the number of samples.
+        tx: numpy array of shape (N,D), D is the number of features.
+        w: weights, numpy array of shape(D,), D is the number of features.
     Returns:
-        the value of the loss (a scalar), corresponding to the input parameters w.
+        mse: scalar corresponding to the mse with factor (1 / 2 n) in front of the sum
+    >>> compute_mse(np.array([0.1,0.2]), np.array([[2.3, 3.2], [1., 0.1]]), np.array([0.03947092, 0.00319628]))
+    0.006417022764962313
     """
 
-    e = y - np.dot(tx, w)
-    return (1 / (2 * len(y))) * np.dot(e.T, e)
+    e = y - tx.dot(w)
+    mse = e.dot(e) / (2 * len(e))
+    return mse
 
 
 def compute_gradient_mse(y, tx, w):
@@ -332,24 +333,19 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         ws: a list of length max_iters containing the model parameters as numpy arrays of shape (M, ),
             for each iteration of GD
     """
-    print(f"GAMMA = {gamma}")
-    print(f"Initial w = {initial_w}")
-    print(f"Max iters = {max_iters}")
-    
-    losses = []  # List to store loss values
-    ws = []  # List to store model parameters
     
     w = initial_w  # Initialize model parameters
+    loss = compute_loss_mse(y, tx, w)
 
     for n_iter in range(max_iters):
         loss = compute_loss_mse(y, tx, w)  # Compute the loss
         grad = compute_gradient_mse(y, tx, w)  # Compute the gradient
         w = w - gamma * grad  # Update the model parameters
+        print(loss)
+    
+    loss = compute_loss_mse(y, tx, w)
 
-        losses.append(loss)  # Append the loss to the list
-        ws.append(w)  # Append the model parameters to the list
-
-    return losses, ws
+    return w, loss
 
 
 
@@ -372,7 +368,7 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
     """
 
     w = initial_w
-    loss = np.inf
+    loss = compute_loss_mse(y, tx, w)
     batch_size = 1
 
     for n_iter in range(max_iters):
@@ -380,6 +376,7 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
             grad = compute_gradient_mse(y_batch, tx_batch, w)
             w = w - gamma * grad
             loss = compute_loss_mse(y, tx, w)
+            
     return w, loss
 
 
@@ -403,6 +400,7 @@ def least_squares(y, tx):
     b = tx.T.dot(y)
     w = np.linalg.solve(a, b)
     loss = compute_loss_mse(y, tx, w)
+    
     return w, loss
 
 
@@ -430,8 +428,9 @@ def ridge_regression(y, tx, lambda_):
     a = tx.T.dot(tx) + 2 * tx.shape[0] * lambda_ * np.eye(tx.shape[1])
     b = tx.T.dot(y)
     w = np.linalg.solve(a, b)
+    loss = compute_loss_mse(y, tx, w)
 
-    return w
+    return w, loss
 
 
 def build_k_indices(y, k_fold, seed):
