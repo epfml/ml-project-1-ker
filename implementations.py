@@ -101,15 +101,6 @@ def cross(data_cleaned, pred, ratio):
     return tx_tr, tx_te, y_tr, y_te
 
 
-def standardize(x):
-    """Standardize the original data set."""
-    mean_x = np.mean(x)
-    x = x - mean_x
-    std_x = np.std(x)
-    x = x / std_x
-    return x, mean_x, std_x
-
-
 def standardize_clean(x):
     """
     Replace NaN values in a feature with the median of the non-NaN values.
@@ -207,7 +198,7 @@ def pca(x_train):
     explained_variance = eig_val / sum_eig_val
     cumulative_variance = np.cumsum(explained_variance)
 
-    index = np.argmax(cumulative_variance > 0.99)
+    index = np.argmax(cumulative_variance > 0.95)
 
     return indices, index
 
