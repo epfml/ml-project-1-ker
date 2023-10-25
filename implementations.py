@@ -736,3 +736,136 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     print("loss={l}".format(l=loss))
 
     return w, loss
+
+
+def preprocessing(x_train):
+    
+    x_train[:,6] = replace(x_train[:,6], [1100,1200], [1,0])
+    x_train[:,13] = replace(x_train[:,13], [0,1], [1,2])
+    x_train[:,24] = replace(x_train[:,24], [1,2,7,9], [0,1,np.nan,np.nan])
+    x_train[:,25] = replace(x_train[:,25], [77,99], [np.nan,np.nan])
+    x_train[:,26] = replace(x_train[:,26], [2,3,4,5,7,9], [0.75,0.5,0.25,0,np.nan,np.nan])
+
+    array_1 = [27,28,29]
+
+    for i in array_1 : 
+        x_train[:,i] = replace(x_train[:,i], [88,77,99], [np.nan,np.nan,np.nan])
+
+    x_train[:,31] = replace(x_train[:,31], [3,7,9], [0,np.nan,np.nan])
+
+    array_2 = [30,32,34,35,36,38,39,40,41,42,43,44,45,46,47,48,53,54,55,56,57,61,64,
+               65,66,67,68,69,70,71,72,73,74,87,95,96,100,103,104,107,108,116,117,118]
+           
+    for i in array_2:
+        x_train[:,i] = replace(x_train[:,i], [7,9], [np.nan,np.nan])
+    
+
+    x_train[:,33] = replace(x_train[:,33], [1,2,3,4,7,8,9], [6,18,42,60,np.nan,120,np.nan])
+    x_train[:,37] = replace(x_train[:,37], [1,2,3,4,7,9], [6,18,42,60,np.nan,np.nan])
+    x_train[:,49] = replace(x_train[:,49], [98,99], [np.nan,np.nan])
+
+    array_3 = [51,52,58]
+
+    for i in array_3 : 
+        x_train[:,i] = replace(x_train[:,i], [9], [np.nan])
+    
+    x_train[:,59] = replace(x_train[:,59], [88,99], [0,np.nan])
+    x_train[:,60] = replace(x_train[:,60], [1,2,3,4,5,6,7,8,77,99] , [5,12.5,17.5,22.5,30,42.5,62.5,75,np.nan,np.nan])
+
+    x_train[:,62] = replace(x_train[:,62], [7777,9999], [np.nan,np.nan])    
+    x_train[:,62] = list(map(IntoPounds,(x_train[:, 62])))
+
+    x_train[:,63] = replace(x_train[:,63], [7777,9999], [np.nan,np.nan])    
+    x_train[:,63] = list(map(IntoInches,(x_train[:, 63])))
+
+    x_train[:,75] = replace(x_train[:,75],[1,2,3,4,5,6,7,8,77,99] , [15,60,135,270,1080,2070,3600,np.nan,np.nan,np.nan])
+    x_train[:,76] = replace(x_train[:,76],[3,7,9] ,[0,np.nan,np.nan])
+    x_train[:,77] = replace(x_train[:,77],[777,888,999] ,[np.nan,0,np.nan])
+    x_train[:,77] = list(map(WeekToMonth,(x_train[:, 77])))
+
+
+    array_5 = [78,80,88,91,98,119]
+
+    for i in array_5 :
+        x_train[:,i] = replace(x_train[:,i], [77,99], [np.nan,np.nan])
+    
+    x_train[:,79] = replace(x_train[:,79],[77,88,99] ,[np.nan,0,np.nan])
+
+    array_6 = [81,82,83,84,85,86]
+
+    for i in array_6 :
+        x_train[:,i] = replace(x_train[:,i], [300,555,777,999], [0,0,np.nan,np.nan])
+        x_train[:,i] = list(map(DayToMonth,(x_train[:, i])))
+    
+    array_7 = [89,90,92,93] 
+
+    for i in array_7 :
+        x_train[:,i] = replace(x_train[:,i], [777,999],  [0,0,np.nan,np.nan])
+
+    x_train[:,89] = list(map(WeekToMonth,(x_train[:, 89])))
+    x_train[:,90] = list(map(HourToMinutes,(x_train[:, 90])))
+    x_train[:,92] = list(map(HourToMinutes,(x_train[:, 92])))
+
+    array_8 = [94,110,111] 
+
+    for i in array_8 :
+        x_train[:,i] = replace(x_train[:,i], [777,888,999], [np.nan,0,np.nan])
+
+    x_train[:,94] = replace(x_train[:,94], [777,888,999], [np.nan,0,np.nan])
+    x_train[:,94] = list(map(WeekToMonth,(x_train[:, 94])))
+    x_train[:,97] = replace(x_train[:,97], [2,3,7,9], [0.5,0,np.nan,np.nan])
+    x_train[:,99] = replace(x_train[:,99], [2,3,4,5,7,8,9], [0.75,0.5,0.25,0,np.nan,np.nan,np.nan])
+    x_train[:,101] = replace(x_train[:,101], [777777, 999999],  [np.nan,np.nan])
+
+    #x_train[:,101] = list(map(DateType,(x_train[:, 101])))
+
+    x_train[:,105] = replace(x_train[:,105], [777777, 999999],  [np.nan,np.nan])
+    #x_train[:,105] = list(map(DateType,(x_train[:, 105])))
+
+    x_train[:,110] = list(map(DayToYear,(x_train[:, 110])))
+    x_train[:,111] = list(map(DayToYear,(x_train[:, 111])))
+
+    x_train[:,113] = replace(x_train[:,113],[77,88,98,99] ,[np.nan,0,np.nan,np.nan])
+    x_train[:,114] = replace(x_train[:,114],[77,88,99] ,[np.nan,0,np.nan])
+    x_train[:,115] = replace(x_train[:,114],[1,2,3,4,7,8,9] ,[15,180,540,720,np.nan,0,np.nan])
+    
+    x_train[:, 240] = replace(x_train[:, 240], [np.nan, 77, 99], [-1, -1, -1])
+    x_train[:, 246] = replace(x_train[:, 246], [np.nan, 14], [-1, -1])
+    x_train[:, 247] = replace(x_train[:, 247], [np.nan, 3], [-1, -1])
+    x_train[:, 252] = replace(x_train[:, 252], [np.nan, 99999], [np.nan, np.nan])
+    x_train[:, 261] = replace(x_train[:, 261], [np.nan, 7, 9], [-1, -1, -1])
+    x_train[:, 262] = replace(x_train[:, 262], [np.nan, 900], [-1, -1])
+    x_train[:, 298] = replace(x_train[:, 298], [np.nan, 9], [1, 1])
+
+    rep_one = [241, 242, 243, 244, 255, 256, 257, 258, 259, 260, 263, 265, 278, 279, 284, 
+          305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320]
+
+    for i in rep_one : 
+        x_train[:, i] = replace(x_train[:, i], [np.nan, 9], [-1, -1])
+    
+    rep_two = [245, 249, 254, 289, 290, 291, 292]
+
+    for i in rep_two : 
+        x_train[:, i] = replace(x_train[:, i], [np.nan], [-1])
+    
+
+    x_train[:, 264] = replace(x_train[:, 264], [np.nan, 99900], [-1, -1])
+    x_train[:, 287] = replace(x_train[:, 287], [np.nan, 99900], [-1, -1])
+    x_train[:, 288] = replace(x_train[:, 288], [np.nan, 99900], [-1, -1])
+
+    x_train[:, 272] = replace(x_train[:, 272], [np.nan], [0])
+    x_train[:, 273] = replace(x_train[:, 273], [np.nan], [0])
+
+    x_train[:, 274] = replace(x_train[:, 274], [np.nan], [1])
+    x_train[:, 275] = replace(x_train[:, 275], [np.nan], [1])
+    x_train[:, 280] = replace(x_train[:, 280], [np.nan], [1])
+    x_train[:, 281] = replace(x_train[:, 281], [np.nan], [1])
+
+    x_train[:, 282] = replace(x_train[:, 282], [np.nan], [2])
+    x_train[:, 283] = replace(x_train[:, 283], [np.nan], [2])
+
+    x_train[:, 293] = replace(x_train[:, 293], [np.nan, 99000], [np.nan, np.nan])
+    x_train[:, 294] = replace(x_train[:, 294], [np.nan, 99000], [np.nan, np.nan])
+    x_train[:, 297] = replace(x_train[:, 297], [np.nan, 99000], [np.nan, np.nan])
+    
+    return x_train
