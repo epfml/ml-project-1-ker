@@ -2,7 +2,6 @@ import csv
 import numpy as np
 import os as os
 
-
 "----------------------------------------------------------------------------------------------------------------------"
 """                                         Helper functions                                                         """
 "----------------------------------------------------------------------------------------------------------------------"
@@ -77,11 +76,11 @@ def create_csv_submission(ids, y_pred, name):
 
 def gen_clean(raw_data, feat_cat, feat_con):
     data = np.ones(raw_data.shape)
-    
+
     for i in feat_con:
         d, std = standardize_clean(raw_data[:, i], False)
         data[:, i] = d
-        
+
     for i in feat_cat:
         d, std = standardize_clean(raw_data[:, i], True)
         data[:, i] = d
@@ -93,10 +92,10 @@ def cross(data_cleaned, pred, ratio):
     train_size = np.floor(data_cleaned.shape[0] * ratio).astype(int)
 
     tx_tr = data_cleaned[:train_size, :]
-    y_tr = pred[:train_size,]
+    y_tr = pred[:train_size, ]
 
     tx_te = data_cleaned[train_size:, :]
-    y_te = pred[train_size:,]
+    y_te = pred[train_size:, ]
 
     return tx_tr, tx_te, y_tr, y_te
 
@@ -114,10 +113,10 @@ def standardize_clean(x, categorical=True):
     nan_indices = np.isnan(x)
     non_nan_values = x[~nan_indices]  # Get non-NaN values
     median_x = np.median(non_nan_values)
-    
-    if categorical: 
+
+    if categorical:
         x[nan_indices] = -1
-        
+
     if (not categorical):
         x[nan_indices] = median_x
 
@@ -333,7 +332,7 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         ws: a list of length max_iters containing the model parameters as numpy arrays of shape (M, ),
             for each iteration of GD
     """
-    
+
     w = initial_w  # Initialize model parameters
     loss = compute_loss_mse(y, tx, w)
 
@@ -342,11 +341,10 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         grad = compute_gradient_mse(y, tx, w)  # Compute the gradient
         w = w - gamma * grad  # Update the model parameters
         print(loss)
-    
+
     loss = compute_loss_mse(y, tx, w)
 
     return w, loss
-
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -376,7 +374,7 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
             grad = compute_gradient_mse(y_batch, tx_batch, w)
             w = w - gamma * grad
             loss = compute_loss_mse(y, tx, w)
-            
+
     return w, loss
 
 
@@ -400,7 +398,7 @@ def least_squares(y, tx):
     b = tx.T.dot(y)
     w = np.linalg.solve(a, b)
     loss = compute_loss_mse(y, tx, w)
-    
+
     return w, loss
 
 
@@ -452,7 +450,7 @@ def build_k_indices(y, k_fold, seed):
     interval = int(num_row / k_fold)
     np.random.seed(seed)
     indices = np.random.permutation(num_row)
-    k_indices = [indices[k * interval : (k + 1) * interval] for k in range(k_fold)]
+    k_indices = [indices[k * interval: (k + 1) * interval] for k in range(k_fold)]
     return np.array(k_indices)
 
 
@@ -476,17 +474,17 @@ def cross_validation(y, x, k_indices, k, lambda_, degree):
     te_indice = k_indices[k]
     tr_indice = k_indices[~(np.arange(k_indices.shape[0]) == k)]
     tr_indice = tr_indice.reshape(-1)
-    
+
     y_te = y[te_indice]
     y_tr = y[tr_indice]
     x_te = x[te_indice]
     x_tr = x[tr_indice]
-    
+
     tx_tr = build_poly(x_tr, degree)
     tx_te = build_poly(x_te, degree)
-    
+
     w, loss = ridge_regression(y_tr, tx_tr, lambda_)
-    
+
     loss_tr = np.sqrt(2 * compute_loss_mse(y_tr, tx_tr, w))
     loss_te = np.sqrt(2 * compute_loss_mse(y_te, tx_te, w))
     return loss_tr, loss_te
@@ -524,7 +522,7 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
         best_indice = np.argmin(rmse_te)
         best_lambdas.append(lambdas[best_indice])
         best_rmses.append(rmse_te[best_indice])
-        
+
         print(f"Degree {degree} done !")
 
     ind_best_degree = np.argmin(best_rmses)
@@ -561,10 +559,10 @@ def calculate_loss(y, tx, w):
     >>> round(calculate_loss(y, tx, w), 8)
     1.52429481
     """
-    
+
     assert y.shape[0] == tx.shape[0]
     assert tx.shape[1] == w.shape[0]
-    
+
     sig = sigmoid(tx.dot(w))
     matrix = y * np.log(sig) + (1 - y) * np.log(1 - sig)
     loss = -(1 / len(y)) * np.sum(matrix)
@@ -619,11 +617,11 @@ def calculate_hessian(y, tx, w):
            [0.48268724, 0.85749269, 1.23229813]])
     """
 
-    sig = sigmoid(tx.dot(w)).reshape(-1,1)
+    sig = sigmoid(tx.dot(w)).reshape(-1, 1)
     diag = np.diag(sig.T[0])
     s = np.multiply(diag, (1 - diag))
     hessian = (1 / y.shape[0]) * tx.T.dot(s.dot(tx))
-    
+
     return hessian
 
 
@@ -656,9 +654,9 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
         grad = calculate_gradient(y, tx, w)
 
         w = w - gamma * grad
-        
+
         # log info
-        #if iter % 100 == 0:
+        # if iter % 100 == 0:
         #    print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
         # converge criterion
         losses.append(loss)
@@ -673,14 +671,13 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 def logistic_regression_demo(x_tr, x_te, y_tr, y_te, gammas, degrees, max_iters):
     best_gammas = []
     best_losses = []
-    
 
     for degree in degrees:
         rmse_te = []
 
         tx_te = build_poly(x_te, degree)
         tx_tr = build_poly(x_tr, degree)
-        
+
         initial_w = np.zeros(tx_tr.shape[1])
 
         for gamma in gammas:
@@ -693,8 +690,8 @@ def logistic_regression_demo(x_tr, x_te, y_tr, y_te, gammas, degrees, max_iters)
         ind_lambda_opt = np.argmin(rmse_te)
         best_gammas.append(gammas[ind_lambda_opt])
         best_losses.append(rmse_te[ind_lambda_opt])
-        
-        print("Degree :",degree," done")
+
+        print("Degree :", degree, " done")
 
     ind_best_degree = np.argmin(best_losses)
     best_degree = degrees[ind_best_degree]
@@ -749,96 +746,95 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
 
 
 def preprocessing(x_train):
-    
-    x_train[:,6] = replace(x_train[:,6], [1100,1200], [1,0])
-    x_train[:,13] = replace(x_train[:,13], [0,1], [1,2])
-    x_train[:,24] = replace(x_train[:,24], [1,2,7,9], [0,1,np.nan,np.nan])
-    x_train[:,25] = replace(x_train[:,25], [77,99], [np.nan,np.nan])
-    x_train[:,26] = replace(x_train[:,26], [2,3,4,5,7,9], [0.75,0.5,0.25,0,np.nan,np.nan])
+    x_train[:, 6] = replace(x_train[:, 6], [1100, 1200], [1, 0])
+    x_train[:, 13] = replace(x_train[:, 13], [0, 1], [1, 2])
+    x_train[:, 24] = replace(x_train[:, 24], [1, 2, 7, 9], [0, 1, np.nan, np.nan])
+    x_train[:, 25] = replace(x_train[:, 25], [77, 99], [np.nan, np.nan])
+    x_train[:, 26] = replace(x_train[:, 26], [2, 3, 4, 5, 7, 9], [0.75, 0.5, 0.25, 0, np.nan, np.nan])
 
-    array_1 = [27,28,29]
+    array_1 = [27, 28, 29]
 
-    for i in array_1 : 
-        x_train[:,i] = replace(x_train[:,i], [88,77,99], [np.nan,np.nan,np.nan])
+    for i in array_1:
+        x_train[:, i] = replace(x_train[:, i], [88, 77, 99], [np.nan, np.nan, np.nan])
 
-    x_train[:,31] = replace(x_train[:,31], [3,7,9], [0,np.nan,np.nan])
+    x_train[:, 31] = replace(x_train[:, 31], [3, 7, 9], [0, np.nan, np.nan])
 
-    array_2 = [30,32,34,35,36,38,39,40,41,42,43,44,45,46,47,48,53,54,55,56,57,61,64,
-               65,66,67,68,69,70,71,72,73,74,87,95,96,100,103,104,107,108,116,117,118]
-           
+    array_2 = [30, 32, 34, 35, 36, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 53, 54, 55, 56, 57, 61, 64,
+               65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 87, 95, 96, 100, 103, 104, 107, 108, 116, 117, 118]
+
     for i in array_2:
-        x_train[:,i] = replace(x_train[:,i], [7,9], [np.nan,np.nan])
-    
+        x_train[:, i] = replace(x_train[:, i], [7, 9], [np.nan, np.nan])
 
-    x_train[:,33] = replace(x_train[:,33], [1,2,3,4,7,8,9], [6,18,42,60,np.nan,120,np.nan])
-    x_train[:,37] = replace(x_train[:,37], [1,2,3,4,7,9], [6,18,42,60,np.nan,np.nan])
-    x_train[:,49] = replace(x_train[:,49], [98,99], [np.nan,np.nan])
+    x_train[:, 33] = replace(x_train[:, 33], [1, 2, 3, 4, 7, 8, 9], [6, 18, 42, 60, np.nan, 120, np.nan])
+    x_train[:, 37] = replace(x_train[:, 37], [1, 2, 3, 4, 7, 9], [6, 18, 42, 60, np.nan, np.nan])
+    x_train[:, 49] = replace(x_train[:, 49], [98, 99], [np.nan, np.nan])
 
-    array_3 = [51,52,58]
+    array_3 = [51, 52, 58]
 
-    for i in array_3 : 
-        x_train[:,i] = replace(x_train[:,i], [9], [np.nan])
-    
-    x_train[:,59] = replace(x_train[:,59], [88,99], [0,np.nan])
-    x_train[:,60] = replace(x_train[:,60], [1,2,3,4,5,6,7,8,77,99] , [5,12.5,17.5,22.5,30,42.5,62.5,75,np.nan,np.nan])
+    for i in array_3:
+        x_train[:, i] = replace(x_train[:, i], [9], [np.nan])
 
-    x_train[:,62] = replace(x_train[:,62], [7777,9999], [np.nan,np.nan])    
-    x_train[:,62] = list(map(IntoPounds,(x_train[:, 62])))
+    x_train[:, 59] = replace(x_train[:, 59], [88, 99], [0, np.nan])
+    x_train[:, 60] = replace(x_train[:, 60], [1, 2, 3, 4, 5, 6, 7, 8, 77, 99],
+                             [5, 12.5, 17.5, 22.5, 30, 42.5, 62.5, 75, np.nan, np.nan])
 
-    x_train[:,63] = replace(x_train[:,63], [7777,9999], [np.nan,np.nan])    
-    x_train[:,63] = list(map(IntoInches,(x_train[:, 63])))
+    x_train[:, 62] = replace(x_train[:, 62], [7777, 9999], [np.nan, np.nan])
+    x_train[:, 62] = list(map(IntoPounds, (x_train[:, 62])))
 
-    x_train[:,75] = replace(x_train[:,75],[1,2,3,4,5,6,7,8,77,99] , [15,60,135,270,1080,2070,3600,np.nan,np.nan,np.nan])
-    x_train[:,76] = replace(x_train[:,76],[3,7,9] ,[0,np.nan,np.nan])
-    x_train[:,77] = replace(x_train[:,77],[777,888,999] ,[np.nan,0,np.nan])
-    x_train[:,77] = list(map(WeekToMonth,(x_train[:, 77])))
+    x_train[:, 63] = replace(x_train[:, 63], [7777, 9999], [np.nan, np.nan])
+    x_train[:, 63] = list(map(IntoInches, (x_train[:, 63])))
 
+    x_train[:, 75] = replace(x_train[:, 75], [1, 2, 3, 4, 5, 6, 7, 8, 77, 99],
+                             [15, 60, 135, 270, 1080, 2070, 3600, np.nan, np.nan, np.nan])
+    x_train[:, 76] = replace(x_train[:, 76], [3, 7, 9], [0, np.nan, np.nan])
+    x_train[:, 77] = replace(x_train[:, 77], [777, 888, 999], [np.nan, 0, np.nan])
+    x_train[:, 77] = list(map(WeekToMonth, (x_train[:, 77])))
 
-    array_5 = [78,80,88,91,98,119]
+    array_5 = [78, 80, 88, 91, 98, 119]
 
-    for i in array_5 :
-        x_train[:,i] = replace(x_train[:,i], [77,99], [np.nan,np.nan])
-    
-    x_train[:,79] = replace(x_train[:,79],[77,88,99] ,[np.nan,0,np.nan])
+    for i in array_5:
+        x_train[:, i] = replace(x_train[:, i], [77, 99], [np.nan, np.nan])
 
-    array_6 = [81,82,83,84,85,86]
+    x_train[:, 79] = replace(x_train[:, 79], [77, 88, 99], [np.nan, 0, np.nan])
 
-    for i in array_6 :
-        x_train[:,i] = replace(x_train[:,i], [300,555,777,999], [0,0,np.nan,np.nan])
-        x_train[:,i] = list(map(DayToMonth,(x_train[:, i])))
-    
-    array_7 = [89,90,92,93] 
+    array_6 = [81, 82, 83, 84, 85, 86]
 
-    for i in array_7 :
-        x_train[:,i] = replace(x_train[:,i], [777,999],  [0,0,np.nan,np.nan])
+    for i in array_6:
+        x_train[:, i] = replace(x_train[:, i], [300, 555, 777, 999], [0, 0, np.nan, np.nan])
+        x_train[:, i] = list(map(DayToMonth, (x_train[:, i])))
 
-    x_train[:,89] = list(map(WeekToMonth,(x_train[:, 89])))
-    x_train[:,90] = list(map(HourToMinutes,(x_train[:, 90])))
-    x_train[:,92] = list(map(HourToMinutes,(x_train[:, 92])))
+    array_7 = [89, 90, 92, 93]
 
-    array_8 = [94,110,111] 
+    for i in array_7:
+        x_train[:, i] = replace(x_train[:, i], [777, 999], [0, 0, np.nan, np.nan])
 
-    for i in array_8 :
-        x_train[:,i] = replace(x_train[:,i], [777,888,999], [np.nan,0,np.nan])
+    x_train[:, 89] = list(map(WeekToMonth, (x_train[:, 89])))
+    x_train[:, 90] = list(map(HourToMinutes, (x_train[:, 90])))
+    x_train[:, 92] = list(map(HourToMinutes, (x_train[:, 92])))
 
-    x_train[:,94] = replace(x_train[:,94], [777,888,999], [np.nan,0,np.nan])
-    x_train[:,94] = list(map(WeekToMonth,(x_train[:, 94])))
-    x_train[:,97] = replace(x_train[:,97], [2,3,7,9], [0.5,0,np.nan,np.nan])
-    x_train[:,99] = replace(x_train[:,99], [2,3,4,5,7,8,9], [0.75,0.5,0.25,0,np.nan,np.nan,np.nan])
-    x_train[:,101] = replace(x_train[:,101], [777777, 999999],  [np.nan,np.nan])
+    array_8 = [94, 110, 111]
 
-    #x_train[:,101] = list(map(DateType,(x_train[:, 101])))
+    for i in array_8:
+        x_train[:, i] = replace(x_train[:, i], [777, 888, 999], [np.nan, 0, np.nan])
 
-    x_train[:,105] = replace(x_train[:,105], [777777, 999999],  [np.nan,np.nan])
-    #x_train[:,105] = list(map(DateType,(x_train[:, 105])))
+    x_train[:, 94] = replace(x_train[:, 94], [777, 888, 999], [np.nan, 0, np.nan])
+    x_train[:, 94] = list(map(WeekToMonth, (x_train[:, 94])))
+    x_train[:, 97] = replace(x_train[:, 97], [2, 3, 7, 9], [0.5, 0, np.nan, np.nan])
+    x_train[:, 99] = replace(x_train[:, 99], [2, 3, 4, 5, 7, 8, 9], [0.75, 0.5, 0.25, 0, np.nan, np.nan, np.nan])
+    x_train[:, 101] = replace(x_train[:, 101], [777777, 999999], [np.nan, np.nan])
 
-    x_train[:,110] = list(map(DayToYear,(x_train[:, 110])))
-    x_train[:,111] = list(map(DayToYear,(x_train[:, 111])))
+    # x_train[:,101] = list(map(DateType,(x_train[:, 101])))
 
-    x_train[:,113] = replace(x_train[:,113],[77,88,98,99] ,[np.nan,0,np.nan,np.nan])
-    x_train[:,114] = replace(x_train[:,114],[77,88,99] ,[np.nan,0,np.nan])
-    x_train[:,115] = replace(x_train[:,114],[1,2,3,4,7,8,9] ,[15,180,540,720,np.nan,0,np.nan])
-    
+    x_train[:, 105] = replace(x_train[:, 105], [777777, 999999], [np.nan, np.nan])
+    # x_train[:,105] = list(map(DateType,(x_train[:, 105])))
+
+    x_train[:, 110] = list(map(DayToYear, (x_train[:, 110])))
+    x_train[:, 111] = list(map(DayToYear, (x_train[:, 111])))
+
+    x_train[:, 113] = replace(x_train[:, 113], [77, 88, 98, 99], [np.nan, 0, np.nan, np.nan])
+    x_train[:, 114] = replace(x_train[:, 114], [77, 88, 99], [np.nan, 0, np.nan])
+    x_train[:, 115] = replace(x_train[:, 114], [1, 2, 3, 4, 7, 8, 9], [15, 180, 540, 720, np.nan, 0, np.nan])
+
     x_train[:, 240] = replace(x_train[:, 240], [np.nan, 77, 99], [-1, -1, -1])
     x_train[:, 246] = replace(x_train[:, 246], [np.nan, 14], [-1, -1])
     x_train[:, 247] = replace(x_train[:, 247], [np.nan, 3], [-1, -1])
@@ -847,17 +843,16 @@ def preprocessing(x_train):
     x_train[:, 262] = replace(x_train[:, 262], [np.nan, 900], [-1, -1])
     x_train[:, 298] = replace(x_train[:, 298], [np.nan, 9], [1, 1])
 
-    rep_one = [241, 242, 243, 244, 255, 256, 257, 258, 259, 260, 263, 265, 278, 279, 284, 
-          305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320]
+    rep_one = [241, 242, 243, 244, 255, 256, 257, 258, 259, 260, 263, 265, 278, 279, 284,
+               305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320]
 
-    for i in rep_one : 
+    for i in rep_one:
         x_train[:, i] = replace(x_train[:, i], [np.nan, 9], [-1, -1])
-    
+
     rep_two = [245, 249, 254, 289, 290, 291, 292]
 
-    for i in rep_two : 
+    for i in rep_two:
         x_train[:, i] = replace(x_train[:, i], [np.nan], [-1])
-    
 
     x_train[:, 264] = replace(x_train[:, 264], [np.nan, 99900], [-1, -1])
     x_train[:, 287] = replace(x_train[:, 287], [np.nan, 99900], [-1, -1])
@@ -877,5 +872,21 @@ def preprocessing(x_train):
     x_train[:, 293] = replace(x_train[:, 293], [np.nan, 99000], [np.nan, np.nan])
     x_train[:, 294] = replace(x_train[:, 294], [np.nan, 99000], [np.nan, np.nan])
     x_train[:, 297] = replace(x_train[:, 297], [np.nan, 99000], [np.nan, np.nan])
-    
+
     return x_train
+
+
+def cat_sep(data, categorical_features):
+
+    seperated_categories = data
+    for feature in categorical_features:
+        col = data[:, feature]
+        unique_values = np.unique(col)
+        for val in unique_values:
+            indices_val = np.where(seperated_categories == val)
+            new_cat = col
+            new_cat[indices_val:, :] = val
+            new_cat[~indices_val:, :] = 0
+            seperated_categories = np.c_[seperated_categories, new_cat]
+
+    return seperated_categories
