@@ -453,6 +453,65 @@ def ridge_regression_demo(x_tr, x_te, y_tr, y_te, lambdas, degrees):
     return best_degree, best_lambda, best_rmse
 
 
+def build_k_indices(y, k_fold, seed):
+    """build k indices for k-fold.
+
+    Args:
+        y:      shape=(N,)
+        k_fold: K in K-fold, i.e. the fold num
+        seed:   the random seed
+
+    Returns:
+        A 2D array of shape=(k_fold, N/k_fold) that indicates the data indices for each fold
+
+    >>> build_k_indices(np.array([1., 2., 3., 4.]), 2, 1)
+    array([[3, 2],
+           [0, 1]])
+    """
+    num_row = y.shape[0]
+    interval = int(num_row / k_fold)
+    np.random.seed(seed)
+    indices = np.random.permutation(num_row)
+    k_indices = [indices[k * interval : (k + 1) * interval] for k in range(k_fold)]
+    return np.array(k_indices)
+
+
+def cross_validation(y, x, k_indices, k, lambda_, degree):
+    """return the loss of ridge regression for a fold corresponding to k_indices
+
+    Args:
+        y:          shape=(N,)
+        x:          shape=(N,)
+        k_indices:  2D array returned by build_k_indices()
+        k:          scalar, the k-th fold (N.B.: not to confused with k_fold which is the fold nums)
+        lambda_:    scalar, cf. ridge_regression()
+        degree:     scalar, cf. build_poly()
+
+    Returns:
+        train and test root mean square errors rmse = sqrt(2 mse)
+
+    >>> cross_validation(np.array([1.,2.,3.,4.]), np.array([6.,7.,8.,9.]), np.array([[3,2], [0,1]]), 1, 2, 3)
+    (0.019866645527597114, 0.33555914361295175)
+    """
+    te_indice = k_indices[k]
+    tr_indice = k_indices[~(np.arange(k_indices.shape[0]) == k)]
+    tr_indice = tr_indice.reshape(-1)
+    
+    y_te = y[te_indice]
+    y_tr = y[tr_indice]
+    x_te = x[te_indice]
+    x_tr = x[tr_indice]
+    
+    tx_tr = build_poly(x_tr, degree)
+    tx_te = build_poly(x_te, degree)
+    
+    w = ridge_regression(y_tr, tx_tr, lambda_)
+    
+    loss_tr = np.sqrt(2 * compute_mse(y_tr, tx_tr, w))
+    loss_te = np.sqrt(2 * compute_mse(y_te, tx_te, w))
+    return loss_tr, loss_te
+
+
 "----------------------------------------------------------------------------------------------------------------------"
 """                              Logistic Regression                                                                 """
 "----------------------------------------------------------------------------------------------------------------------"
