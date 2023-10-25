@@ -75,13 +75,18 @@ def create_csv_submission(ids, y_pred, name):
             writer.writerow({"Id": int(r1), "Prediction": int(r2)})
 
 
-def gen_clean(raw_data):
+def gen_clean(raw_data, feat_cat, feat_con):
     data = np.ones(raw_data.shape)
     stds = np.array([])
-    for i in range(data.shape[1]):
+    
+    for i in feat_con:
         d, std = standardize_clean(raw_data[:, i])
         data[:, i] = d
         stds = np.append(stds, std)
+        
+    for i in feat_cat:
+        d = clean_cat(raw_data[:, i])
+        data[:, i] = d
 
     indices = np.where(stds != 0)
     data = data[:, indices]
@@ -113,24 +118,41 @@ def standardize(x):
 
 def standardize_clean(x):
     """
-    Replace NaN values in a feature with the mean of the non-NaN values.
+    Replace NaN values in a feature with the median of the non-NaN values.
 
     Args:
         x (numpy.ndarray): 1D array representing a feature.
 
     Returns:
-        numpy.ndarray: 1D array with NaN values replaced by the mean.
+        numpy.ndarray: 1D array with NaN values replaced by the median.
     """
     nan_indices = np.isnan(x)
-    non_nan_indices = ~nan_indices  # Invert the nan_indices to get non-NaN indices
-    mean_x = np.mean(x[non_nan_indices])
-    x[nan_indices] = mean_x
+    non_nan_values = x[~nan_indices]  # Get non-NaN values
+    median_x = np.median(non_nan_values)
+    x[nan_indices] = median_x
 
-    x = x - mean_x
-    std_x = np.std(x[non_nan_indices])
+    x = x - median_x
+    std_x = np.std(x[~nan_indices])
     if std_x != 0:
         x = x / std_x
     return x, std_x
+
+
+def clean_cat(x):
+    """
+    Replace NaN values in a categorical feature with -1.
+
+    Args:
+        x (numpy.ndarray): 1D array representing a feature.
+
+    Returns:
+        numpy.ndarray: 1D array with NaN values replaced by -1.
+    """
+    nan_indices = np.isnan(x)
+    non_nan_values = x[~nan_indices]  # Get non-NaN values
+    x[nan_indices] = -1
+
+    return x
 
 
 def build_model_data(data, pred):
