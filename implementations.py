@@ -212,6 +212,31 @@ def build_poly(x, degree):
     return x_poly
 
 
+def best_threshold(y, tx, w):
+    threshold = np.linspace(-1, 1, 10000)
+
+    best_f = 0
+    best_thresh = -100
+
+    for el in threshold:
+        pred_data = np.dot(tx, w)
+
+        pred_data[pred_data > el] = 1
+        pred_data[pred_data <= el] = -1
+
+        tp = np.sum((pred_data == 1) & (y == 1))
+        fp = np.sum((pred_data == 1) & (y == -1))
+        fn = np.sum((pred_data == -1) & (y == 1))
+
+        f_one = tp / (tp + 0.5 * (fn + fp))
+
+        if f_one > best_f:
+            best_f = f_one
+            best_thresh = el
+
+    return best_thresh
+
+
 "----------------------------------------------------------------------------------------------------------------------"
 """                                        Conversion metrics functions                                              """
 "----------------------------------------------------------------------------------------------------------------------"
