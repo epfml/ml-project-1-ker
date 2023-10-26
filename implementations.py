@@ -116,7 +116,7 @@ def standardize_clean(x, categorical=True):
     median_x = np.median(non_nan_values)
 
     if categorical:
-        x[nan_indices] = -1
+        x[nan_indices] = 0
 
     if not categorical:
         x[nan_indices] = median_x
@@ -300,6 +300,27 @@ def HourToMinutes(x):
         return int(x_str[0]) * 60 + int(x_str[-4:-2])
     else:
         return x
+
+
+def convert_to_days(x):
+    x = np.where((x >= 101) & (x < 200), x - 100, x)
+    x = np.where((x >= 201) & (x < 300), x - 200, x)
+    x = np.where((x >= 301) & (x < 400), x - 300, x)
+    x = np.where((x >= 401) & (x < 500), x - 400, x)
+
+    return x
+
+
+def asthme(x):
+    if x <= 97:
+        return 1
+    else:
+        return 0
+
+
+def line191(x):
+    if x >= 11:
+        return
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -864,49 +885,77 @@ def preprocessing(x_train):
     x_train[:, 114] = replace(x_train[:, 114], [77, 88, 99], [np.nan, 0, np.nan])
     x_train[:, 115] = replace(x_train[:, 114], [1, 2, 3, 4, 7, 8, 9], [15, 180, 540, 720, np.nan, 0, np.nan])
 
-    x_train[:, 240] = replace(x_train[:, 240], [np.nan, 77, 99], [-1, -1, -1])
-    x_train[:, 246] = replace(x_train[:, 246], [np.nan, 14], [-1, -1])
-    x_train[:, 247] = replace(x_train[:, 247], [np.nan, 3], [-1, -1])
-    x_train[:, 252] = replace(x_train[:, 252], [np.nan, 99999], [np.nan, np.nan])
-    x_train[:, 261] = replace(x_train[:, 261], [np.nan, 7, 9], [-1, -1, -1])
-    x_train[:, 262] = replace(x_train[:, 262], [np.nan, 900], [-1, -1])
-    x_train[:, 298] = replace(x_train[:, 298], [np.nan, 9], [1, 1])
+    nan79 = [120, 121, 123, 124, 125, 126, 129, 132, 136, 137, 138, 139,
+             140, 141, 142, 144, 151, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 169,
+             170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
+             191,
+             194, 196, 198, 199, 201, 202, 203, 204, 205, 214, 261]
 
-    rep_one = [241, 242, 243, 244, 255, 256, 257, 258, 259, 260, 263, 265, 278, 279, 284,
-               305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320]
+    for i in nan79:
+        x_train[:, i] = replace(x_train[:, i], [7, 9], [np.nan, np.nan])
 
-    for i in rep_one:
-        x_train[:, i] = replace(x_train[:, i], [np.nan, 9], [-1, -1])
+    nan789 = [192, 193]
 
-    rep_two = [245, 249, 254, 289, 290, 291, 292]
+    for i in nan789:
+        x_train[:, i] = replace(x_train[:, i], [7, 8, 9], [np.nan, np.nan, np.nan])
 
-    for i in rep_two:
-        x_train[:, i] = replace(x_train[:, i], [np.nan], [-1])
+    nan7799 = [122, 130, 168, 224, 240]
 
-    x_train[:, 264] = replace(x_train[:, 264], [np.nan, 99900], [-1, -1])
-    x_train[:, 287] = replace(x_train[:, 287], [np.nan, 99900], [-1, -1])
-    x_train[:, 288] = replace(x_train[:, 288], [np.nan, 99900], [-1, -1])
+    for i in nan7799:
+        x_train[:, i] = replace(x_train[:, i], [77, 99], [np.nan, np.nan])
 
-    x_train[:, 272] = replace(x_train[:, 272], [np.nan], [0])
-    x_train[:, 273] = replace(x_train[:, 273], [np.nan], [0])
+    x_train[:, 127] = replace(x_train[:, 127], [6, 7, 9], [np.nan, np.nan])
+    x_train[:, 128] = replace(x_train[:, 128], [6, 7], [np.nan, np.nan])
 
-    x_train[:, 274] = replace(x_train[:, 274], [np.nan], [1])
-    x_train[:, 275] = replace(x_train[:, 275], [np.nan], [1])
-    x_train[:, 280] = replace(x_train[:, 280], [np.nan], [1])
-    x_train[:, 281] = replace(x_train[:, 281], [np.nan], [1])
+    nan9 = [131, 153, 200, 223, 230, 231, 232, 233, 234, 235, 236, 241, 242, 243, 244, 255, 256, 257, 258, 259, 260,
+            263,
+            265, 278, 279, 298, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320]
 
-    x_train[:, 282] = replace(x_train[:, 282], [np.nan], [2])
-    x_train[:, 283] = replace(x_train[:, 283], [np.nan], [2])
+    for i in nan9:
+        x_train[:, i] = replace(x_train[:, i], [9], [np.nan])
 
-    x_train[:, 293] = replace(x_train[:, 293], [np.nan, 99000], [np.nan, np.nan])
-    x_train[:, 294] = replace(x_train[:, 294], [np.nan, 99000], [np.nan, np.nan])
-    x_train[:, 297] = replace(x_train[:, 297], [np.nan, 99000], [np.nan, np.nan])
+    nan7 = [133, 134, 135, 146, 152]
+
+    for i in nan7:
+        x_train[:, i] = replace(x_train[:, i], [7], [np.nan])
+
+    nan99900 = [264, 287, 288, 293, 294, 297]
+    for i in nan99900:
+        x_train[:, i] = replace(x_train[:, i], [99900], [np.nan])
+
+    x_train[:, 143] = replace(x_train[:, 143], [555, 777, 999], [20, np.nan, np.nan])
+    x_train[:, 143] = list(map(convert_to_days, (x_train[:, 143])))
+
+    x_train[:, 145] = list(map(asthme, (x_train[:, 145])))
+
+    n088_98 = [147, 148]
+
+    for i in n088_98:
+        x_train[:, i] = replace(x_train[:, i], [88, 98], [0, np.nan])
+
+    x_train[:, 149] = replace(x_train[:, 149], [88, 98, 99], [0, np.nan, np.nan])
+    x_train[:, 150] = replace(x_train[:, 150], [777, 888, 999], [np.nan, 0, np.nan])
+
+    x_train[:, 191] = list(map(line191, (x_train[:, 191])))
+
+    x_train[:, 195] = replace(x_train[:, 195], [97, 98, 99], [np.nan, 0, np.nan])
+    x_train[:, 197] = replace(x_train[:, 197], [97, 98, 99], [np.nan, 0, np.nan])
+
+    nan088 = [206, 207, 208, 209, 210, 211, 212, 213]
+    for i in nan088:
+        x_train[:, i] = replace(x_train[:, i], [77, 88, 99], [np.nan, 0, np.nan])
+
+    x_train[:, 225] = replace(x_train[:, 225], [7, 77, 99], [np.nan, np.nan, np.nan])
+    x_train[:, 239] = replace(x_train[:, 239], [7, 77, 99], [np.nan, np.nan, np.nan])
+
+    x_train[:, 246] = replace(x_train[:, 246], [14], [np.nan])
+    x_train[:, 247] = replace(x_train[:, 247], [3], [np.nan])
+    x_train[:, 262] = replace(x_train[:, 262], [900], [np.nan])
 
     return x_train
 
 
 def cat_sep(data, categorical_features):
-
     seperated_categories = data
     for feature in categorical_features:
         col = data[:, feature]
@@ -915,7 +964,7 @@ def cat_sep(data, categorical_features):
             if val != 0:
                 indices_val = np.where(seperated_categories == val)
                 new_cat = col
-                new_cat[indices_val:, :] = val
+                new_cat[indices_val:, :] = 1
                 new_cat[~indices_val:, :] = 0
                 seperated_categories = np.c_[seperated_categories, new_cat]
 
