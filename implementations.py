@@ -105,7 +105,8 @@ def standardize_clean(x, categorical=True):
     Replace NaN values in a feature with the median of the non-NaN values.
 
     Args:
-        x (numpy.ndarray): 1D array representing a feature.
+        :param x: feature to be standardized
+        :param categorical: boolean representing if it is a categorical feature or not
 
     Returns:
         numpy.ndarray: 1D array with NaN values replaced by the median.
@@ -117,7 +118,7 @@ def standardize_clean(x, categorical=True):
     if categorical:
         x[nan_indices] = -1
 
-    if (not categorical):
+    if not categorical:
         x[nan_indices] = median_x
 
     x = x - median_x
@@ -179,7 +180,6 @@ def pca(x_train):
     indices = np.arange(0, len(eig_val), 1)
     indices = ([x for _, x in sorted(zip(eig_val, indices))])[::-1]
     eig_val = eig_val[indices]
-    eig_vec = eig_vec[:, indices]
 
     sum_eig_val = np.sum(eig_val)
     explained_variance = eig_val / sum_eig_val
@@ -290,7 +290,7 @@ def compute_loss_mse(y, tx, w):
         w: weights, numpy array of shape(D,), D is the number of features.
     Returns:
         mse: scalar corresponding to the mse with factor (1 / 2 n) in front of the sum
-    >>> compute_mse(np.array([0.1,0.2]), np.array([[2.3, 3.2], [1., 0.1]]), np.array([0.03947092, 0.00319628]))
+    >>> compute_loss_mse(np.array([0.1,0.2]), np.array([[2.3, 3.2], [1., 0.1]]), np.array([0.03947092, 0.00319628]))
     0.006417022764962313
     """
 
@@ -334,7 +334,6 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
     """
 
     w = initial_w  # Initialize model parameters
-    loss = compute_loss_mse(y, tx, w)
 
     for n_iter in range(max_iters):
         loss = compute_loss_mse(y, tx, w)  # Compute the loss
@@ -362,7 +361,8 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
         gamma: a scalar denoting the stepsize
     Returns:
         losses: a list of length max_iters containing the loss value (scalar) for each iteration of SGD
-        ws: a list of length max_iters containing the model parameters as numpy arrays of shape (M, ), for each iteration         of SGD
+        ws: a list of length max_iters containing the model parameters as numpy arrays of shape (M, )
+        , for each iteration of SGD
     """
 
     w = initial_w
@@ -494,9 +494,12 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
     """cross validation over regularisation parameter lambda and degree.
 
     Args:
+        y: labels of shape (n, )
+        x: samples of shape (n, c)
         degrees: shape = (d,), where d is the number of degrees to test
         k_fold: integer, the number of folds
         lambdas: shape = (p, ) where p is the number of values of lambda to test
+        seed: random seed
     Returns:
         best_degree : integer, value of the best degree
         best_lambda : scalar, value of the best lambda
@@ -553,10 +556,10 @@ def calculate_loss(y, tx, w):
     Returns:
         a non-negative loss
 
-    >>> y = np.c_[[0., 1.]]
-    >>> tx = np.arange(4).reshape(2, 2)
-    >>> w = np.c_[[2., 3.]]
-    >>> round(calculate_loss(y, tx, w), 8)
+    >>> y_loss = np.c_[[0., 1.]]
+    >>> tx_loss = np.arange(4).reshape(2, 2)
+    >>> w_loss = np.c_[[2., 3.]]
+    >>> round(calculate_loss(y_loss, tx_loss, w_loss), 8)
     1.52429481
     """
 
@@ -582,10 +585,10 @@ def calculate_gradient(y, tx, w):
         a vector of shape (D, 1)
 
     >>> np.set_printoptions(8)
-    >>> y = np.c_[[0., 1.]]
-    >>> tx = np.arange(6).reshape(2, 3)
-    >>> w = np.array([[0.1], [0.2], [0.3]])
-    >>> calculate_gradient(y, tx, w)
+    >>> y_grad = np.c_[[0., 1.]]
+    >>> tx_grad = np.arange(6).reshape(2, 3)
+    >>> w_grad = np.array([[0.1], [0.2], [0.3]])
+    >>> calculate_gradient(y_grad, tx_grad, w_grad)
     array([[-0.10370763],
            [ 0.2067104 ],
            [ 0.51712843]])
@@ -608,10 +611,10 @@ def calculate_hessian(y, tx, w):
     Returns:
         a hessian matrix of shape=(D, D)
 
-    >>> y = np.c_[[0., 1.]]
-    >>> tx = np.arange(6).reshape(2, 3)
-    >>> w = np.array([[0.1], [0.2], [0.3]])
-    >>> calculate_hessian(y, tx, w)
+    >>> y_te = np.c_[[0., 1.]]
+    >>> tx_te = np.arange(6).reshape(2, 3)
+    >>> w_te = np.array([[0.1], [0.2], [0.3]])
+    >>> calculate_hessian(y_te, tx_te, w_te)
     array([[0.28961235, 0.3861498 , 0.48268724],
            [0.3861498 , 0.62182124, 0.85749269],
            [0.48268724, 0.85749269, 1.23229813]])
@@ -633,7 +636,8 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     Args:
         y:  shape=(N, 1)
         tx: shape=(N, D)
-        w:  shape=(D, 1)
+        initial_w:  shape=(D, 1)
+        max_iters: # of iterations
         gamma: scalar
 
     Returns:
@@ -647,7 +651,7 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     w = initial_w
 
     # start the logistic regression
-    for iter in range(max_iters):
+    for iterable in range(max_iters):
         # get loss and update w.
 
         loss = calculate_loss(y, tx, w)
@@ -668,20 +672,19 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
     return w, loss
 
 
-def logistic_regression_demo(x_tr, x_te, y_tr, y_te, gammas, degrees, max_iters):
+def logistic_regression_demo(x_tr, y_tr, gammas, degrees, max_iters):
     best_gammas = []
     best_losses = []
 
     for degree in degrees:
         rmse_te = []
 
-        tx_te = build_poly(x_te, degree)
         tx_tr = build_poly(x_tr, degree)
 
         initial_w = np.zeros(tx_tr.shape[1])
 
+        loss_te_tmp = []
         for gamma in gammas:
-            loss_te_tmp = []
             weight, loss = logistic_regression(y_tr, tx_tr, initial_w, max_iters, gamma)
             loss_te_tmp.append(loss)
 
@@ -709,7 +712,8 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     Args:
         y:  shape=(N, 1)
         tx: shape=(N, D)
-        w:  shape=(D, 1)
+        initial_w:  shape=(D, 1)
+        max_iters: # of iterations
         gamma: scalar
         lambda_: scalar
 
@@ -724,7 +728,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     w = initial_w
 
     # start the logistic regression
-    for iter in range(max_iters):
+    for iterable in range(max_iters):
         # get loss and update w.
 
         loss = calculate_loss(y, tx, w) + lambda_ * np.squeeze(w.T.dot(w))
@@ -732,8 +736,8 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
         w = w - gamma * grad
 
         # log info
-        if iter % 100 == 0:
-            print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
+        if iterable % 100 == 0:
+            print("Current iteration={i}, loss={l}".format(i=iterable, l=loss))
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
@@ -883,10 +887,11 @@ def cat_sep(data, categorical_features):
         col = data[:, feature]
         unique_values = np.unique(col)
         for val in unique_values:
-            indices_val = np.where(seperated_categories == val)
-            new_cat = col
-            new_cat[indices_val:, :] = val
-            new_cat[~indices_val:, :] = 0
-            seperated_categories = np.c_[seperated_categories, new_cat]
+            if val != 0:
+                indices_val = np.where(seperated_categories == val)
+                new_cat = col
+                new_cat[indices_val:, :] = val
+                new_cat[~indices_val:, :] = 0
+                seperated_categories = np.c_[seperated_categories, new_cat]
 
     return seperated_categories
