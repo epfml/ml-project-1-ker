@@ -78,11 +78,11 @@ def gen_clean(raw_data, feat_cat, feat_con):
     data = np.ones(raw_data.shape)
 
     for i in feat_con:
-        d, std = standardize_clean(raw_data[:, i], False)
+        d = standardize_clean(raw_data[:, i], False)
         data[:, i] = d
 
     for i in feat_cat:
-        d, std = standardize_clean(raw_data[:, i], True)
+        d = standardize_clean(raw_data[:, i], True)
         data[:, i] = d
 
     return data
@@ -120,12 +120,13 @@ def standardize_clean(x, categorical=True):
 
     if not categorical:
         x[nan_indices] = median_x
+    
+    x = x - np.mean(non_nan_values)
+        std_x = np.std(x[~nan_indices])
+        if std_x != 0:
+            x = x / std_x
 
-    x = x - median_x
-    std_x = np.std(x[~nan_indices])
-    if std_x != 0:
-        x = x / std_x
-    return x, std_x
+    return x
 
 
 def build_model_data(data, pred):
@@ -213,7 +214,7 @@ def build_poly(x, degree):
 
 
 def best_threshold(y, tx, w):
-    threshold = np.linspace(-1, 1, 10000)
+    threshold = np.linspace(-1, 1, 1000)
 
     best_f = 0
     best_thresh = -100
@@ -242,21 +243,21 @@ def best_threshold(y, tx, w):
 "----------------------------------------------------------------------------------------------------------------------"
 
 
-def IntoPounds(x):
+def into_pounds(x):
     if x >= 9000:
         return int((x - 9000) * 2.20462)
     else:
         return x
 
 
-def IntoInches(x):
+def into_inches(x):
     if x < 9000:
         return np.floor(x / 100) * 12 + (x % 100)
     else:
         return (x - 9000) * 0.393701
 
 
-def WeekToMonth(x):
+def week_to_month(x):
     x_str = str(x)
     if x_str[0] == "1":
         return 4 * int(x_str[-4:-2])
@@ -266,7 +267,7 @@ def WeekToMonth(x):
         return x
 
 
-def DayToMonth(x):
+def day_to_month(x):
     x_str = str(x)
     if x_str[0] == "1":
         return 30 * int(x_str[-4:-2])
@@ -278,7 +279,7 @@ def DayToMonth(x):
         return x
 
 
-def DayToYear(x):
+def day_to_year(x):
     x_str = str(x)
     if x_str[0] == "1":
         return 365 * int(x_str[-4:-2])
@@ -292,7 +293,7 @@ def DayToYear(x):
         return x
 
 
-def HourToMinutes(x):
+def hour_to_min(x):
     x_str = str(x)
     if len(x_str) == 4:
         return int(x_str[-4:-2])
@@ -316,11 +317,6 @@ def asthme(x):
         return 1
     else:
         return 0
-
-
-def line191(x):
-    if x >= 11:
-        return
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -829,16 +825,16 @@ def preprocessing(x_train):
                              [5, 12.5, 17.5, 22.5, 30, 42.5, 62.5, 75, np.nan, np.nan])
 
     x_train[:, 62] = replace(x_train[:, 62], [7777, 9999], [np.nan, np.nan])
-    x_train[:, 62] = list(map(IntoPounds, (x_train[:, 62])))
+    x_train[:, 62] = list(map(into_pounds, (x_train[:, 62])))
 
     x_train[:, 63] = replace(x_train[:, 63], [7777, 9999], [np.nan, np.nan])
-    x_train[:, 63] = list(map(IntoInches, (x_train[:, 63])))
+    x_train[:, 63] = list(map(into_inches, (x_train[:, 63])))
 
     x_train[:, 75] = replace(x_train[:, 75], [1, 2, 3, 4, 5, 6, 7, 8, 77, 99],
                              [15, 60, 135, 270, 1080, 2070, 3600, np.nan, np.nan, np.nan])
     x_train[:, 76] = replace(x_train[:, 76], [3, 7, 9], [0, np.nan, np.nan])
     x_train[:, 77] = replace(x_train[:, 77], [777, 888, 999], [np.nan, 0, np.nan])
-    x_train[:, 77] = list(map(WeekToMonth, (x_train[:, 77])))
+    x_train[:, 77] = list(map(week_to_month, (x_train[:, 77])))
 
     array_5 = [78, 80, 88, 91, 98, 119]
 
@@ -851,16 +847,16 @@ def preprocessing(x_train):
 
     for i in array_6:
         x_train[:, i] = replace(x_train[:, i], [300, 555, 777, 999], [0, 0, np.nan, np.nan])
-        x_train[:, i] = list(map(DayToMonth, (x_train[:, i])))
+        x_train[:, i] = list(map(day_to_month, (x_train[:, i])))
 
     array_7 = [89, 90, 92, 93]
 
     for i in array_7:
         x_train[:, i] = replace(x_train[:, i], [777, 999], [0, 0, np.nan, np.nan])
 
-    x_train[:, 89] = list(map(WeekToMonth, (x_train[:, 89])))
-    x_train[:, 90] = list(map(HourToMinutes, (x_train[:, 90])))
-    x_train[:, 92] = list(map(HourToMinutes, (x_train[:, 92])))
+    x_train[:, 89] = list(map(week_to_month, (x_train[:, 89])))
+    x_train[:, 90] = list(map(hour_to_min, (x_train[:, 90])))
+    x_train[:, 92] = list(map(hour_to_min, (x_train[:, 92])))
 
     array_8 = [94, 110, 111]
 
@@ -868,7 +864,7 @@ def preprocessing(x_train):
         x_train[:, i] = replace(x_train[:, i], [777, 888, 999], [np.nan, 0, np.nan])
 
     x_train[:, 94] = replace(x_train[:, 94], [777, 888, 999], [np.nan, 0, np.nan])
-    x_train[:, 94] = list(map(WeekToMonth, (x_train[:, 94])))
+    x_train[:, 94] = list(map(week_to_month, (x_train[:, 94])))
     x_train[:, 97] = replace(x_train[:, 97], [2, 3, 7, 9], [0.5, 0, np.nan, np.nan])
     x_train[:, 99] = replace(x_train[:, 99], [2, 3, 4, 5, 7, 8, 9], [0.75, 0.5, 0.25, 0, np.nan, np.nan, np.nan])
     x_train[:, 101] = replace(x_train[:, 101], [777777, 999999], [np.nan, np.nan])
@@ -878,18 +874,18 @@ def preprocessing(x_train):
     x_train[:, 105] = replace(x_train[:, 105], [777777, 999999], [np.nan, np.nan])
     # x_train[:,105] = list(map(DateType,(x_train[:, 105])))
 
-    x_train[:, 110] = list(map(DayToYear, (x_train[:, 110])))
-    x_train[:, 111] = list(map(DayToYear, (x_train[:, 111])))
+    x_train[:, 110] = list(map(day_to_year, (x_train[:, 110])))
+    x_train[:, 111] = list(map(day_to_year, (x_train[:, 111])))
 
     x_train[:, 113] = replace(x_train[:, 113], [77, 88, 98, 99], [np.nan, 0, np.nan, np.nan])
     x_train[:, 114] = replace(x_train[:, 114], [77, 88, 99], [np.nan, 0, np.nan])
     x_train[:, 115] = replace(x_train[:, 114], [1, 2, 3, 4, 7, 8, 9], [15, 180, 540, 720, np.nan, 0, np.nan])
 
-    nan79 = [120, 121, 123, 124, 125, 126, 129, 132, 136, 137, 138, 139,
-             140, 141, 142, 144, 151, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 169,
-             170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
-             191,
-             194, 196, 198, 199, 201, 202, 203, 204, 205, 214, 261]
+    nan79 = [120, 121, 123, 124, 125, 126, 129, 132, 136, 137, 138, 139, 140,
+             141, 142, 144, 151, 154, 155, 156, 157, 158, 159, 160, 161, 162,
+             163, 164, 165, 166, 169, 170, 171, 172, 173, 174, 175, 176, 177,
+             178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
+             191, 194, 196, 198, 199, 201, 202, 203, 204, 205, 214, 261]
 
     for i in nan79:
         x_train[:, i] = replace(x_train[:, i], [7, 9], [np.nan, np.nan])
@@ -923,7 +919,7 @@ def preprocessing(x_train):
     for i in nan99900:
         x_train[:, i] = replace(x_train[:, i], [99900], [np.nan])
 
-    x_train[:, 143] = replace(x_train[:, 143], [555, 777, 999], [20, np.nan, np.nan])
+    x_train[:, 143] = replace(x_train[:, 143], [777, 999], [np.nan, np.nan])
     x_train[:, 143] = list(map(convert_to_days, (x_train[:, 143])))
 
     x_train[:, 145] = list(map(asthme, (x_train[:, 145])))
@@ -935,8 +931,6 @@ def preprocessing(x_train):
 
     x_train[:, 149] = replace(x_train[:, 149], [88, 98, 99], [0, np.nan, np.nan])
     x_train[:, 150] = replace(x_train[:, 150], [777, 888, 999], [np.nan, 0, np.nan])
-
-    x_train[:, 191] = list(map(line191, (x_train[:, 191])))
 
     x_train[:, 195] = replace(x_train[:, 195], [97, 98, 99], [np.nan, 0, np.nan])
     x_train[:, 197] = replace(x_train[:, 197], [97, 98, 99], [np.nan, 0, np.nan])
@@ -956,16 +950,17 @@ def preprocessing(x_train):
 
 
 def cat_sep(data, categorical_features):
-    seperated_categories = data
+    seperated_categories = data.copy()
     for feature in categorical_features:
         col = data[:, feature]
         unique_values = np.unique(col)
         for val in unique_values:
             if val != 0:
-                indices_val = np.where(seperated_categories == val)
-                new_cat = col
-                new_cat[indices_val:, :] = 1
-                new_cat[~indices_val:, :] = 0
+                indices_val = np.where(col == val)
+                indices_val_not = np.where(col != val)
+                new_cat = col.copy()
+                new_cat[indices_val] = 1
+                new_cat[indices_val_not] = 0
                 seperated_categories = np.c_[seperated_categories, new_cat]
 
     return seperated_categories
