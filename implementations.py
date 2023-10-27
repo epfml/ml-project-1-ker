@@ -122,9 +122,9 @@ def standardize_clean(x, categorical=True):
         x[nan_indices] = median_x
     
     x = x - np.mean(non_nan_values)
-        std_x = np.std(x[~nan_indices])
-        if std_x != 0:
-            x = x / std_x
+    std_x = np.std(x[~nan_indices])
+    if std_x != 0:
+        x = x / std_x
 
     return x
 
