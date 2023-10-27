@@ -129,6 +129,48 @@ def standardize_clean(x, categorical=True):
     return x
 
 
+def gen_binary(raw_data, feat_cat, feat_con):
+    data = np.ones(raw_data.shape)
+
+    for i in feat_con:
+        d = clean_binary(raw_data[:, i], False)
+        data[:, i] = d
+
+    for i in feat_cat:
+        d = clean_binary(raw_data[:, i], True)
+        data[:, i] = d
+
+    return data
+
+
+def clean_binary(x, categorical=True):
+    """
+    Replace NaN values in a feature with the median of the non-NaN values.
+
+    Args:
+        :param x: feature to be standardized
+        :param categorical: boolean representing if it is a categorical feature or not
+
+    Returns:
+        numpy.ndarray: 1D array with NaN values replaced by the median.
+    """
+    nan_indices = np.isnan(x)
+    non_nan_values = x[~nan_indices]  # Get non-NaN values
+    median_x = np.median(non_nan_values)
+
+    if categorical:
+        x[nan_indices] = 0
+
+    if not categorical:
+        x[nan_indices] = median_x
+        x = x - np.mean(non_nan_values)
+        std_x = np.std(x[~nan_indices])
+        if std_x != 0:
+            x = x / std_x
+
+    return x
+
+
 def build_model_data(data, pred):
     """Form (y,tX) to get regression data in matrix form."""
     y = pred
@@ -214,7 +256,7 @@ def build_poly(x, degree):
 
 
 def best_threshold(y, tx, w):
-    threshold = np.linspace(-1, 1, 1000)
+    threshold = np.linspace(-1, 1, 100)
 
     best_f = 0
     best_thresh = -100
@@ -702,8 +744,8 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
         w = w - gamma * grad
 
         # log info
-        # if iter % 100 == 0:
-        #    print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
+        if iterable % 100 == 0:
+            print("Current iteration={i}, loss={l}".format(i=iterable, l=loss))
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
@@ -952,6 +994,7 @@ def preprocessing(x_train):
 def cat_sep(data, categorical_features):
     seperated_categories = data.copy()
     for feature in categorical_features:
+        print(f"Feature : {feature}")
         col = data[:, feature]
         unique_values = np.unique(col)
         for val in unique_values:
