@@ -1,8 +1,9 @@
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
-import os as os
 from mpl_toolkits.mplot3d import Axes3D
+import seaborn as sns
+import os as os
 
 
 "----------------------------------------------------------------------------------------------------------------------"
@@ -641,13 +642,14 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     surf = ax.plot_surface(np.log10(L), D, RMSE, cmap='viridis')
-    ax.set_xlabel('Degree')
-    ax.set_ylabel('log10(Lambda)')
+    ax.set_xlabel('log10(Lambda)')
+    ax.set_ylabel('Degree')
     ax.set_zlabel('RMSE')
-    ax.scatter([best_degree], [np.log10(best_lambda)], [best_rmse], color='red', s=100, label='Minimum RMSE')
+    ax.scatter([np.log10(best_lambda)], [best_degree], [best_rmse], color='red', s=100, label='Minimum RMSE')
     plt.title('RMSE for Different Degrees and Lambdas')
     plt.legend()
     plt.show()
+
 
     return best_degree, best_lambda, best_rmse
 
@@ -870,8 +872,7 @@ def preprocessing(x_train):
     x_train[:, 13] = replace(x_train[:, 13], [0, 1], [1, 2])
     x_train[:, 24] = replace(x_train[:, 24], [1, 2, 7, 9], [0, 1, np.nan, np.nan])
     x_train[:, 25] = replace(x_train[:, 25], [77, 99], [np.nan, np.nan])
-    x_train[:, 26] = replace(x_train[:, 26], [2, 3, 4, 5, 7, 9], [0.75, 0.5, 0.25, 0, np.nan, np.nan])
-
+    x_train[:, 26] = replace(x_train[:, 26], [2,3,4,5,7,9], [0.75,0.5,0.25,0,np.nan,np.nan])
     array_1 = [27, 28, 29]
 
     for i in array_1:
