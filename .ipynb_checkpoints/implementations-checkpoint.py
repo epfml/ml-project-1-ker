@@ -1,6 +1,8 @@
 import csv
 import numpy as np
 import os as os
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                                         Helper functions                                                         """
@@ -122,6 +124,48 @@ def standardize_clean(x, categorical=True):
         x[nan_indices] = median_x
     
     x = x - np.mean(non_nan_values)
+    std_x = np.std(x[~nan_indices])
+    if std_x != 0:
+        x = x / std_x
+
+    return x
+
+
+def gen_binary(raw_data, feat_cat, feat_con):
+    data = np.ones(raw_data.shape)
+
+    for i in feat_con:
+        d = clean_binary(raw_data[:, i], False)
+        data[:, i] = d
+
+    for i in feat_cat:
+        d = clean_binary(raw_data[:, i], True)
+        data[:, i] = d
+
+    return data
+
+
+def clean_binary(x, categorical=True):
+    """
+    Replace NaN values in a feature with the median of the non-NaN values.
+
+    Args:
+        :param x: feature to be standardized
+        :param categorical: boolean representing if it is a categorical feature or not
+
+    Returns:
+        numpy.ndarray: 1D array with NaN values replaced by the median.
+    """
+    nan_indices = np.isnan(x)
+    non_nan_values = x[~nan_indices]  # Get non-NaN values
+    median_x = np.median(non_nan_values)
+
+    if categorical:
+        x[nan_indices] = 0
+
+    if not categorical:
+        x[nan_indices] = median_x
+        x = x - np.mean(non_nan_values)
         std_x = np.std(x[~nan_indices])
         if std_x != 0:
             x = x / std_x
@@ -214,10 +258,11 @@ def build_poly(x, degree):
 
 
 def best_threshold(y, tx, w):
-    threshold = np.linspace(-1, 1, 1000)
+    threshold = np.linspace(-1, 1, 100)
 
     best_f = 0
     best_thresh = -100
+    f1_scores = []
 
     for el in threshold:
         pred_data = np.dot(tx, w)
@@ -230,10 +275,21 @@ def best_threshold(y, tx, w):
         fn = np.sum((pred_data == -1) & (y == 1))
 
         f_one = tp / (tp + 0.5 * (fn + fp))
+        f1_scores.append(f_one)
 
         if f_one > best_f:
             best_f = f_one
             best_thresh = el
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(threshold, f1_scores, label='F1-Score', color='b')
+    plt.axvline(x=best_thresh, color='r', linestyle='--', label=f'Best Threshold (F1={best_f:.2f})')
+    plt.xlabel('Threshold')
+    plt.ylabel('F1-Score')
+    plt.title('Threshold vs. F1-Score')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
     return best_thresh
 
@@ -572,8 +628,8 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
 
     ind_best_degree = np.argmin(best_rmses)
     best_degree = degrees[ind_best_degree]
-    best_lambda = best_lambdas[best_degree]
-    best_rmse = best_rmses[best_degree]
+    best_lambda = best_lambdas[ind_best_degree]
+    best_rmse = best_rmses[ind_best_degree]
 
     return best_degree, best_lambda, best_rmse
 
@@ -702,8 +758,8 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
         w = w - gamma * grad
 
         # log info
-        # if iter % 100 == 0:
-        #    print("Current iteration={i}, loss={l}".format(i=iter, l=loss))
+        if iterable % 100 == 0:
+            print("Current iteration={i}, loss={l}".format(i=iterable, l=loss))
         # converge criterion
         losses.append(loss)
         if len(losses) > 1 and np.abs(losses[-1] - losses[-2]) < threshold:
@@ -796,8 +852,7 @@ def preprocessing(x_train):
     x_train[:, 13] = replace(x_train[:, 13], [0, 1], [1, 2])
     x_train[:, 24] = replace(x_train[:, 24], [1, 2, 7, 9], [0, 1, np.nan, np.nan])
     x_train[:, 25] = replace(x_train[:, 25], [77, 99], [np.nan, np.nan])
-    x_train[:, 26] = replace(x_train[:, 26], [2, 3, 4, 5, 7, 9], [0.75, 0.5, 0.25, 0, np.nan, np.nan])
-
+    x_train[:, 26] = replace(x_train[:, 26], [2,3,4,5,7,9], [0.75,0.5,0.25,0,np.nan,np.nan])
     array_1 = [27, 28, 29]
 
     for i in array_1:
@@ -952,6 +1007,7 @@ def preprocessing(x_train):
 def cat_sep(data, categorical_features):
     seperated_categories = data.copy()
     for feature in categorical_features:
+        print(f"Feature : {feature}")
         col = data[:, feature]
         unique_values = np.unique(col)
         for val in unique_values:

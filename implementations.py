@@ -1,6 +1,8 @@
 import csv
 import numpy as np
 import os as os
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                                         Helper functions                                                         """
@@ -260,6 +262,7 @@ def best_threshold(y, tx, w):
 
     best_f = 0
     best_thresh = -100
+    f1_scores = []
 
     for el in threshold:
         pred_data = np.dot(tx, w)
@@ -272,10 +275,21 @@ def best_threshold(y, tx, w):
         fn = np.sum((pred_data == -1) & (y == 1))
 
         f_one = tp / (tp + 0.5 * (fn + fp))
+        f1_scores.append(f_one)
 
         if f_one > best_f:
             best_f = f_one
             best_thresh = el
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(threshold, f1_scores, label='F1-Score', color='b')
+    plt.axvline(x=best_thresh, color='r', linestyle='--', label=f'Best Threshold (F1={best_f:.2f})')
+    plt.xlabel('Threshold')
+    plt.ylabel('F1-Score')
+    plt.title('Threshold vs. F1-Score')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
     return best_thresh
 
@@ -614,8 +628,8 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
 
     ind_best_degree = np.argmin(best_rmses)
     best_degree = degrees[ind_best_degree]
-    best_lambda = best_lambdas[best_degree]
-    best_rmse = best_rmses[best_degree]
+    best_lambda = best_lambdas[ind_best_degree]
+    best_rmse = best_rmses[ind_best_degree]
 
     return best_degree, best_lambda, best_rmse
 
@@ -838,8 +852,7 @@ def preprocessing(x_train):
     x_train[:, 13] = replace(x_train[:, 13], [0, 1], [1, 2])
     x_train[:, 24] = replace(x_train[:, 24], [1, 2, 7, 9], [0, 1, np.nan, np.nan])
     x_train[:, 25] = replace(x_train[:, 25], [77, 99], [np.nan, np.nan])
-    x_train[:, 26] = replace(x_train[:, 26], [2, 3, 4, 5, 7, 9], [0.75, 0.5, 0.25, 0, np.nan, np.nan])
-
+    x_train[:, 26] = replace(x_train[:, 26], [2,3,4,5,7,9], [0.75,0.5,0.25,0,np.nan,np.nan])
     array_1 = [27, 28, 29]
 
     for i in array_1:
