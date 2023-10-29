@@ -1,6 +1,9 @@
 import csv
 import numpy as np
+import matplotlib.pyplot as plt
 import os as os
+from mpl_toolkits.mplot3d import Axes3D
+
 
 "----------------------------------------------------------------------------------------------------------------------"
 """                                         Helper functions                                                         """
@@ -260,6 +263,7 @@ def best_threshold(y, tx, w):
 
     best_f = 0
     best_thresh = -100
+    f1_scores = []
 
     for el in threshold:
         pred_data = np.dot(tx, w)
@@ -272,10 +276,21 @@ def best_threshold(y, tx, w):
         fn = np.sum((pred_data == -1) & (y == 1))
 
         f_one = tp / (tp + 0.5 * (fn + fp))
+        f1_scores.append(f_one)
 
         if f_one > best_f:
             best_f = f_one
             best_thresh = el
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(threshold, f1_scores, label='F1-Score', color='b')
+    plt.axvline(x=best_thresh, color='r', linestyle='--', label=f'Best Threshold (F1={best_f:.2f})')
+    plt.xlabel('Threshold')
+    plt.ylabel('F1-Score')
+    plt.title('Threshold vs. F1-Score')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
     return best_thresh
 
@@ -423,7 +438,6 @@ def mean_squared_error_gd(y, tx, initial_w, max_iters, gamma):
         loss = compute_loss_mse(y, tx, w)  # Compute the loss
         grad = compute_gradient_mse(y, tx, w)  # Compute the gradient
         w = w - gamma * grad  # Update the model parameters
-        print(loss)
 
     loss = compute_loss_mse(y, tx, w)
 
@@ -595,7 +609,10 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
 
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
-
+    
+    # losses for the graph
+    loss_graph = []
+    
     best_lambdas = []
     best_rmses = []
     for degree in degrees:
@@ -606,16 +623,31 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
                 _, loss_te = cross_validation(y, x, k_indices, k, lambda_, degree)
                 rmse_te_temp.append(loss_te)
             rmse_te.append(np.mean(rmse_te_temp))
+            loss_graph.append(np.mean(rmse_te_temp))
         best_indice = np.argmin(rmse_te)
         best_lambdas.append(lambdas[best_indice])
         best_rmses.append(rmse_te[best_indice])
 
         print(f"Degree {degree} done !")
 
+        
     ind_best_degree = np.argmin(best_rmses)
     best_degree = degrees[ind_best_degree]
-    best_lambda = best_lambdas[best_degree]
-    best_rmse = best_rmses[best_degree]
+    best_lambda = best_lambdas[ind_best_degree]
+    best_rmse = best_rmses[ind_best_degree]
+    
+    D, L = np.meshgrid(degrees, lambdas)
+    RMSE = np.array(loss_graph).reshape(D.shape)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(np.log10(L), D, RMSE, cmap='viridis')
+    ax.set_xlabel('Degree')
+    ax.set_ylabel('log10(Lambda)')
+    ax.set_zlabel('RMSE')
+    ax.scatter([best_degree], [np.log10(best_lambda)], [best_rmse], color='red', s=100, label='Minimum RMSE')
+    plt.title('RMSE for Different Degrees and Lambdas')
+    plt.legend()
+    plt.show()
 
     return best_degree, best_lambda, best_rmse
 
