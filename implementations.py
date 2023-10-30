@@ -702,6 +702,7 @@ def cross_validation(y, x, k_indices, k, lambda_, degree):
 
 def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
     """Hyper-parameter tuning over cross-validation for parameters lambda and degree.
+       Also plots the grid-search.
 
     Args:
         y: labels of shape (n, )
@@ -764,11 +765,16 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
 
 
 "----------------------------------------------------------------------------------------------------------------------"
-"""                              Logistic Regression                                                                 """
+"""                                               Logistic Regression                                                """
 "----------------------------------------------------------------------------------------------------------------------"
 
 
 def sigmoid(t):
+    """
+    The sigmoid loss function
+
+    :return: the sigmoid loss
+    """
     return 1.0 / (1 + np.exp(-t))
 
 
@@ -901,13 +907,14 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 
 def logistic_regression_demo(x_tr, y_tr, gammas, degrees, max_iters):
     """
+    Hyper-parameter tuning for the paramters gamma and degree
 
-    :param x_tr:
-    :param y_tr:
-    :param gammas:
-    :param degrees:
-    :param max_iters:
-    :return:
+    :param x_tr: samples
+    :param y_tr: labels
+    :param gammas: gamma values for grid-search
+    :param degrees: degree values for grid-search
+    :param max_iters: maximum number of iterations for GD of logistic regression
+    :return: the best hyper-paramaters gamma and degree with the reespective loss
     """
     best_gammas = []
     best_losses = []
@@ -986,6 +993,16 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
 
 
 def cat_sep(data, categorical_features):
+    """
+    One-hot encoding for the categorical features.
+
+    [[1, 2] ----> [[1, 2, 1, 0, 1, 0]
+    [3, 4]] ----> [3, 4, 0, 1, 0, 1]]
+
+    :param data: dataset
+    :param categorical_features: categorical data indices
+    :return: the new dataset with the one-hot encoding for the categorical features
+    """
     seperated_categories = data.copy()
     for feature in categorical_features:
         print(f"Feature : {feature}")
@@ -1000,10 +1017,21 @@ def cat_sep(data, categorical_features):
                 new_cat[indices_val_not] = 0
                 seperated_categories = np.c_[seperated_categories, new_cat]
 
-    return seperated_categories
+    one_hot_data = np.delete(seperated_categories, categorical_features, axis=1)
+
+    return one_hot_data
 
 
 def gen_binary(raw_data, feat_cat, feat_con):
+    """
+    Standardize the data according to the type of the feature (categorical or continuous)
+    for the special one-hot encoding experience.
+
+    :param raw_data: samples
+    :param feat_cat: categorical features
+    :param feat_con: continuous features
+    :return: the standardized data
+    """
     data = np.ones(raw_data.shape)
 
     for i in feat_con:
@@ -1020,6 +1048,7 @@ def gen_binary(raw_data, feat_cat, feat_con):
 def clean_binary(x, categorical=True):
     """
     Replace NaN values in a feature with the median of the non-NaN values.
+    Standardize and normalize only the continuous features.
 
     Args:
         :param x: feature to be standardized
