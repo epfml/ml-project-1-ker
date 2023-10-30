@@ -1,13 +1,10 @@
 import csv
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import seaborn as sns
 import os as os
 
-
 "----------------------------------------------------------------------------------------------------------------------"
-"""                                         Helper functions                                                         """
+"""                                                 Helper functions                                                 """
 "----------------------------------------------------------------------------------------------------------------------"
 
 
@@ -78,21 +75,15 @@ def create_csv_submission(ids, y_pred, name):
             writer.writerow({"Id": int(r1), "Prediction": int(r2)})
 
 
-def gen_clean(raw_data, feat_cat, feat_con):
-    data = np.ones(raw_data.shape)
-
-    for i in feat_con:
-        d = standardize_clean(raw_data[:, i], False)
-        data[:, i] = d
-
-    for i in feat_cat:
-        d = standardize_clean(raw_data[:, i], True)
-        data[:, i] = d
-
-    return data
-
-
 def cross(data_cleaned, pred, ratio):
+    """
+    Separate the data into a training and test set .
+
+    :param data_cleaned: samples
+    :param pred: labels
+    :param ratio: the repartition of the sets (80%-20% usually)
+    :return: the training and test sets
+    """
     train_size = np.floor(data_cleaned.shape[0] * ratio).astype(int)
 
     tx_tr = data_cleaned[:train_size, :]
@@ -104,77 +95,6 @@ def cross(data_cleaned, pred, ratio):
     return tx_tr, tx_te, y_tr, y_te
 
 
-def standardize_clean(x, categorical=True):
-    """
-    Replace NaN values in a feature with the median of the non-NaN values.
-
-    Args:
-        :param x: feature to be standardized
-        :param categorical: boolean representing if it is a categorical feature or not
-
-    Returns:
-        numpy.ndarray: 1D array with NaN values replaced by the median.
-    """
-    nan_indices = np.isnan(x)
-    non_nan_values = x[~nan_indices]  # Get non-NaN values
-    median_x = np.median(non_nan_values)
-
-    if categorical:
-        x[nan_indices] = 0
-
-    if not categorical:
-        x[nan_indices] = median_x
-    
-    x = x - np.mean(non_nan_values)
-    std_x = np.std(x[~nan_indices])
-    if std_x != 0:
-        x = x / std_x
-
-    return x
-
-
-def gen_binary(raw_data, feat_cat, feat_con):
-    data = np.ones(raw_data.shape)
-
-    for i in feat_con:
-        d = clean_binary(raw_data[:, i], False)
-        data[:, i] = d
-
-    for i in feat_cat:
-        d = clean_binary(raw_data[:, i], True)
-        data[:, i] = d
-
-    return data
-
-
-def clean_binary(x, categorical=True):
-    """
-    Replace NaN values in a feature with the median of the non-NaN values.
-
-    Args:
-        :param x: feature to be standardized
-        :param categorical: boolean representing if it is a categorical feature or not
-
-    Returns:
-        numpy.ndarray: 1D array with NaN values replaced by the median.
-    """
-    nan_indices = np.isnan(x)
-    non_nan_values = x[~nan_indices]  # Get non-NaN values
-    median_x = np.median(non_nan_values)
-
-    if categorical:
-        x[nan_indices] = 0
-
-    if not categorical:
-        x[nan_indices] = median_x
-        x = x - np.mean(non_nan_values)
-        std_x = np.std(x[~nan_indices])
-        if std_x != 0:
-            x = x / std_x
-
-    return x
-
-
 def build_model_data(data, pred):
     """Form (y,tX) to get regression data in matrix form."""
     y = pred
@@ -184,41 +104,14 @@ def build_model_data(data, pred):
     return y, tx
 
 
-def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
-    """
-    Generate a minibatch iterator for a dataset.
-    Takes as input two iterables (here the output desired values 'y' and the input data 'tx')
-    Outputs an iterator which gives mini-batches of `batch_size` matching elements from `y` and `tx`.
-    Data can be randomly shuffled to avoid ordering in the original data messing with the randomness of the minibatches.
-    Example of use :
-    for minibatch_y, minibatch_tx in batch_iter(y, tx, 32):
-        <DO-SOMETHING>
-    """
-    data_size = len(y)
-
-    if shuffle:
-        shuffle_indices = np.random.permutation(np.arange(data_size))
-        shuffled_y = y[shuffle_indices]
-        shuffled_tx = tx[shuffle_indices]
-    else:
-        shuffled_y = y
-        shuffled_tx = tx
-    for batch_num in range(num_batches):
-        start_index = batch_num * batch_size
-        end_index = min((batch_num + 1) * batch_size, data_size)
-        if start_index != end_index:
-            yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
-
-
-def replace(arr, old_values, new_values):
-    result = arr.copy()
-    for old_val, new_val in zip(old_values, new_values):
-        result[result == old_val] = new_val
-
-    return result
-
-
 def pca(x_train):
+    """
+    Implementation of the PCA algorithm
+
+    :param x_train: dataset to perform PCA onto
+    :return: indices: the sorted indices of the features from the most influent one to the least one
+             index: the number of features we can retain
+    """
     cov = np.cov(x_train.T)
     cov = np.round(cov, 2)
 
@@ -237,29 +130,16 @@ def pca(x_train):
     return indices, index
 
 
-def build_poly(x, degree):
-    """polynomial basis functions for input data x, for j=0 up to j=degree.
-
-    Args:
-        x: numpy array of shape (N,), N is the number of samples.
-        degree: integer.
-
-    Returns:
-        poly: numpy array of shape (N,d+1)
-
-    >>> build_poly(np.array([0.0, 1.5]), 2)
-    array([[1.  , 0.  , 0.  ],
-           [1.  , 1.5 , 2.25]])
-    """
-    x_poly = np.ones((len(x), 1))
-    for i in range(1, degree + 1):
-        x_pow = x ** i
-        x_poly = np.c_[x_poly, x_pow]
-
-    return x_poly
-
-
 def best_threshold(y, tx, w):
+    """
+    Function to find the threshold that maximizes the F1-score.
+    Additionally, this function plots the grid-search of the F1-score.
+
+    :param y: labels
+    :param tx: samples
+    :param w: weights obtained after training
+    :return: threshold that maximizes the F1-score
+    """
     threshold = np.linspace(-1, 1, 100)
 
     best_f = 0
@@ -296,8 +176,191 @@ def best_threshold(y, tx, w):
     return best_thresh
 
 
+def gen_clean(raw_data, feat_cat, feat_con):
+    """
+    Standardize the data according to the type of the feature (categorical or continuous)
+
+    :param raw_data: samples
+    :param feat_cat: categorical features
+    :param feat_con: continuous features
+    :return: the standardized data
+    """
+    data = np.ones(raw_data.shape)
+
+    for i in feat_con:
+        d = standardize_clean(raw_data[:, i], False)
+        data[:, i] = d
+
+    for i in feat_cat:
+        d = standardize_clean(raw_data[:, i], True)
+        data[:, i] = d
+
+    return data
+
+
+def standardize_clean(x, categorical=True):
+    """
+    Replace NaN values in a feature with the median of the non-NaN values.
+
+    Args:
+        :param x: feature to be standardized
+        :param categorical: boolean representing if it is a categorical feature or not
+
+    Returns:
+        numpy.ndarray: 1D array with NaN values replaced by the median.
+    """
+    nan_indices = np.isnan(x)
+    non_nan_values = x[~nan_indices]  # Get non-NaN values
+    median_x = np.median(non_nan_values)
+
+    if categorical:
+        x[nan_indices] = 0
+
+    if not categorical:
+        x[nan_indices] = median_x
+
+    x = x - np.mean(non_nan_values)
+    std_x = np.std(x[~nan_indices])
+    if std_x != 0:
+        x = x / std_x
+
+    return x
+
+
+def replace(arr, old_values, new_values):
+    """
+    Replace all the old_values in arr by the corresponding in new_values
+
+    :param arr: The array to perform the operation on
+    :param old_values: Values to be replaced
+    :param new_values: Replacement values
+    :return: Array with the replaced values
+    """
+    result = arr.copy()
+    for old_val, new_val in zip(old_values, new_values):
+        result[result == old_val] = new_val
+
+    return result
+
+
+def preprocessing(x_train):
+    """
+    This function cleans the data for each features using the replace function defined above
+
+    :param x_train: dataset to be cleaned
+    :return: the cleaned dataset
+    """
+    x_train[:, 6] = replace(x_train[:, 6], [1100, 1200], [1, 0])
+    x_train[:, 13] = replace(x_train[:, 13], [0, 1], [1, 2])
+    x_train[:, 24] = replace(x_train[:, 24], [1, 2, 7, 9], [0, 1, np.nan, np.nan])
+    x_train[:, 25] = replace(x_train[:, 25], [77, 99], [np.nan, np.nan])
+    x_train[:, 26] = replace(x_train[:, 26], [2, 3, 4, 5, 7, 9], [0.75, 0.5, 0.25, 0, np.nan, np.nan])
+    array_1 = [27, 28, 29]
+    for i in array_1:
+        x_train[:, i] = replace(x_train[:, i], [88, 77, 99], [np.nan, np.nan, np.nan])
+    x_train[:, 31] = replace(x_train[:, 31], [3, 7, 9], [0, np.nan, np.nan])
+    array_2 = [30, 32, 34, 35, 36, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 53, 54, 55, 56, 57, 61, 64,
+               65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 87, 95, 96, 100, 103, 104, 107, 108, 116, 117, 118]
+    for i in array_2:
+        x_train[:, i] = replace(x_train[:, i], [7, 9], [np.nan, np.nan])
+    x_train[:, 33] = replace(x_train[:, 33], [1, 2, 3, 4, 7, 8, 9], [6, 18, 42, 60, np.nan, 120, np.nan])
+    x_train[:, 37] = replace(x_train[:, 37], [1, 2, 3, 4, 7, 9], [6, 18, 42, 60, np.nan, np.nan])
+    x_train[:, 49] = replace(x_train[:, 49], [98, 99], [np.nan, np.nan])
+    array_3 = [51, 52, 58]
+    for i in array_3:
+        x_train[:, i] = replace(x_train[:, i], [9], [np.nan])
+    x_train[:, 59] = replace(x_train[:, 59], [88, 99], [0, np.nan])
+    x_train[:, 60] = replace(x_train[:, 60], [1, 2, 3, 4, 5, 6, 7, 8, 77, 99],
+                             [5, 12.5, 17.5, 22.5, 30, 42.5, 62.5, 75, np.nan, np.nan])
+    x_train[:, 62] = replace(x_train[:, 62], [7777, 9999], [np.nan, np.nan])
+    x_train[:, 62] = list(map(into_pounds, (x_train[:, 62])))
+    x_train[:, 63] = replace(x_train[:, 63], [7777, 9999], [np.nan, np.nan])
+    x_train[:, 63] = list(map(into_inches, (x_train[:, 63])))
+    x_train[:, 75] = replace(x_train[:, 75], [1, 2, 3, 4, 5, 6, 7, 8, 77, 99],
+                             [15, 60, 135, 270, 1080, 2070, 3600, np.nan, np.nan, np.nan])
+    x_train[:, 76] = replace(x_train[:, 76], [3, 7, 9], [0, np.nan, np.nan])
+    x_train[:, 77] = replace(x_train[:, 77], [777, 888, 999], [np.nan, 0, np.nan])
+    x_train[:, 77] = list(map(week_to_month, (x_train[:, 77])))
+    array_5 = [78, 80, 88, 91, 98, 119]
+    for i in array_5:
+        x_train[:, i] = replace(x_train[:, i], [77, 99], [np.nan, np.nan])
+    x_train[:, 79] = replace(x_train[:, 79], [77, 88, 99], [np.nan, 0, np.nan])
+    array_6 = [81, 82, 83, 84, 85, 86]
+    for i in array_6:
+        x_train[:, i] = replace(x_train[:, i], [300, 555, 777, 999], [0, 0, np.nan, np.nan])
+        x_train[:, i] = list(map(day_to_month, (x_train[:, i])))
+    array_7 = [89, 90, 92, 93]
+    for i in array_7:
+        x_train[:, i] = replace(x_train[:, i], [777, 999], [0, 0, np.nan, np.nan])
+    x_train[:, 89] = list(map(week_to_month, (x_train[:, 89])))
+    x_train[:, 90] = list(map(hour_to_min, (x_train[:, 90])))
+    x_train[:, 92] = list(map(hour_to_min, (x_train[:, 92])))
+    array_8 = [94, 110, 111]
+    for i in array_8:
+        x_train[:, i] = replace(x_train[:, i], [777, 888, 999], [np.nan, 0, np.nan])
+    x_train[:, 94] = replace(x_train[:, 94], [777, 888, 999], [np.nan, 0, np.nan])
+    x_train[:, 94] = list(map(week_to_month, (x_train[:, 94])))
+    x_train[:, 97] = replace(x_train[:, 97], [2, 3, 7, 9], [0.5, 0, np.nan, np.nan])
+    x_train[:, 99] = replace(x_train[:, 99], [2, 3, 4, 5, 7, 8, 9], [0.75, 0.5, 0.25, 0, np.nan, np.nan, np.nan])
+    x_train[:, 101] = replace(x_train[:, 101], [777777, 999999], [np.nan, np.nan])
+    # x_train[:,101] = list(map(DateType,(x_train[:, 101])))
+    x_train[:, 105] = replace(x_train[:, 105], [777777, 999999], [np.nan, np.nan])
+    # x_train[:,105] = list(map(DateType,(x_train[:, 105])))
+    x_train[:, 110] = list(map(day_to_year, (x_train[:, 110])))
+    x_train[:, 111] = list(map(day_to_year, (x_train[:, 111])))
+    x_train[:, 113] = replace(x_train[:, 113], [77, 88, 98, 99], [np.nan, 0, np.nan, np.nan])
+    x_train[:, 114] = replace(x_train[:, 114], [77, 88, 99], [np.nan, 0, np.nan])
+    x_train[:, 115] = replace(x_train[:, 114], [1, 2, 3, 4, 7, 8, 9], [15, 180, 540, 720, np.nan, 0, np.nan])
+    nan79 = [120, 121, 123, 124, 125, 126, 129, 132, 136, 137, 138, 139, 140,
+             141, 142, 144, 151, 154, 155, 156, 157, 158, 159, 160, 161, 162,
+             163, 164, 165, 166, 169, 170, 171, 172, 173, 174, 175, 176, 177,
+             178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
+             191, 194, 196, 198, 199, 201, 202, 203, 204, 205, 214, 261]
+    for i in nan79:
+        x_train[:, i] = replace(x_train[:, i], [7, 9], [np.nan, np.nan])
+    nan789 = [192, 193]
+    for i in nan789:
+        x_train[:, i] = replace(x_train[:, i], [7, 8, 9], [np.nan, np.nan, np.nan])
+    nan7799 = [122, 130, 168, 224, 240]
+    for i in nan7799:
+        x_train[:, i] = replace(x_train[:, i], [77, 99], [np.nan, np.nan])
+    x_train[:, 127] = replace(x_train[:, 127], [6, 7, 9], [np.nan, np.nan])
+    x_train[:, 128] = replace(x_train[:, 128], [6, 7], [np.nan, np.nan])
+    nan9 = [131, 153, 200, 223, 230, 231, 232, 233, 234, 235, 236, 241, 242, 243, 244, 255, 256, 257, 258, 259, 260,
+            263,
+            265, 278, 279, 298, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320]
+    for i in nan9:
+        x_train[:, i] = replace(x_train[:, i], [9], [np.nan])
+    nan7 = [133, 134, 135, 146, 152]
+    for i in nan7:
+        x_train[:, i] = replace(x_train[:, i], [7], [np.nan])
+    nan99900 = [264, 287, 288, 293, 294, 297]
+    for i in nan99900:
+        x_train[:, i] = replace(x_train[:, i], [99900], [np.nan])
+    x_train[:, 143] = replace(x_train[:, 143], [777, 999], [np.nan, np.nan])
+    x_train[:, 143] = list(map(convert_to_days, (x_train[:, 143])))
+    x_train[:, 145] = list(map(asthme, (x_train[:, 145])))
+    n088_98 = [147, 148]
+    for i in n088_98:
+        x_train[:, i] = replace(x_train[:, i], [88, 98], [0, np.nan])
+    x_train[:, 149] = replace(x_train[:, 149], [88, 98, 99], [0, np.nan, np.nan])
+    x_train[:, 150] = replace(x_train[:, 150], [777, 888, 999], [np.nan, 0, np.nan])
+    x_train[:, 195] = replace(x_train[:, 195], [97, 98, 99], [np.nan, 0, np.nan])
+    x_train[:, 197] = replace(x_train[:, 197], [97, 98, 99], [np.nan, 0, np.nan])
+    nan088 = [206, 207, 208, 209, 210, 211, 212, 213]
+    for i in nan088:
+        x_train[:, i] = replace(x_train[:, i], [77, 88, 99], [np.nan, 0, np.nan])
+    x_train[:, 225] = replace(x_train[:, 225], [7, 77, 99], [np.nan, np.nan, np.nan])
+    x_train[:, 239] = replace(x_train[:, 239], [7, 77, 99], [np.nan, np.nan, np.nan])
+    x_train[:, 246] = replace(x_train[:, 246], [14], [np.nan])
+    x_train[:, 247] = replace(x_train[:, 247], [3], [np.nan])
+    x_train[:, 262] = replace(x_train[:, 262], [900], [np.nan])
+
+    return x_train
+
+
 "----------------------------------------------------------------------------------------------------------------------"
-"""                                        Conversion metrics functions                                              """
+"""                                  Conversion metrics functions for preprocessing                                  """
 "----------------------------------------------------------------------------------------------------------------------"
 
 
@@ -477,8 +540,34 @@ def mean_squared_error_sgd(y, tx, initial_w, max_iters, gamma):
     return w, loss
 
 
+def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
+    """
+    Generate a minibatch iterator for a dataset.
+    Takes as input two iterables (here the output desired values 'y' and the input data 'tx')
+    Outputs an iterator which gives mini-batches of `batch_size` matching elements from `y` and `tx`.
+    Data can be randomly shuffled to avoid ordering in the original data messing with the randomness of the minibatches.
+    Example of use :
+    for minibatch_y, minibatch_tx in batch_iter(y, tx, 32):
+        <DO-SOMETHING>
+    """
+    data_size = len(y)
+
+    if shuffle:
+        shuffle_indices = np.random.permutation(np.arange(data_size))
+        shuffled_y = y[shuffle_indices]
+        shuffled_tx = tx[shuffle_indices]
+    else:
+        shuffled_y = y
+        shuffled_tx = tx
+    for batch_num in range(num_batches):
+        start_index = batch_num * batch_size
+        end_index = min((batch_num + 1) * batch_size, data_size)
+        if start_index != end_index:
+            yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
+
+
 "----------------------------------------------------------------------------------------------------------------------"
-"""                              Least squares regression using normal equations                                     """
+"""                                 Least squares regression using normal equations                                  """
 "----------------------------------------------------------------------------------------------------------------------"
 
 
@@ -528,6 +617,28 @@ def ridge_regression(y, tx, lambda_):
     loss = compute_loss_mse(y, tx, w)
 
     return w, loss
+
+
+def build_poly(x, degree):
+    """polynomial basis functions for input data x, for j=0 up to j=degree.
+
+    Args:
+        x: numpy array of shape (N,), N is the number of samples.
+        degree: integer.
+
+    Returns:
+        poly: numpy array of shape (N,d+1)
+
+    >>> build_poly(np.array([0.0, 1.5]), 2)
+    array([[1.  , 0.  , 0.  ],
+           [1.  , 1.5 , 2.25]])
+    """
+    x_poly = np.ones((len(x), 1))
+    for i in range(1, degree + 1):
+        x_pow = x ** i
+        x_poly = np.c_[x_poly, x_pow]
+
+    return x_poly
 
 
 def build_k_indices(y, k_fold, seed):
@@ -590,7 +701,7 @@ def cross_validation(y, x, k_indices, k, lambda_, degree):
 
 
 def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
-    """cross validation over regularisation parameter lambda and degree.
+    """Hyper-parameter tuning over cross-validation for parameters lambda and degree.
 
     Args:
         y: labels of shape (n, )
@@ -604,16 +715,16 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
         best_lambda : scalar, value of the best lambda
         best_rmse : value of the rmse for the couple (best_degree, best_lambda)
 
-    >>> best_degree_selection(np.arange(2,11), 4, np.logspace(-4, 0, 30))
+    >>> best_degree_selection(np.arange(2, 11), 4, np.logspace(-4, 0, 30))
     (7, 0.004520353656360241, 0.28957280566456634)
     """
 
     # split data in k fold
     k_indices = build_k_indices(y, k_fold, seed)
-    
+
     # losses for the graph
     loss_graph = []
-    
+
     best_lambdas = []
     best_rmses = []
     for degree in degrees:
@@ -631,12 +742,11 @@ def best_degree_selection(y, x, degrees, k_fold, lambdas, seed=1):
 
         print(f"Degree {degree} done !")
 
-        
     ind_best_degree = np.argmin(best_rmses)
     best_degree = degrees[ind_best_degree]
     best_lambda = best_lambdas[ind_best_degree]
     best_rmse = best_rmses[ind_best_degree]
-    
+
     D, L = np.meshgrid(degrees, lambdas)
     RMSE = np.array(loss_graph).reshape(D.shape)
     fig = plt.figure()
@@ -790,6 +900,15 @@ def logistic_regression(y, tx, initial_w, max_iters, gamma):
 
 
 def logistic_regression_demo(x_tr, y_tr, gammas, degrees, max_iters):
+    """
+
+    :param x_tr:
+    :param y_tr:
+    :param gammas:
+    :param degrees:
+    :param max_iters:
+    :return:
+    """
     best_gammas = []
     best_losses = []
 
@@ -866,163 +985,6 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma):
     return w, loss
 
 
-def preprocessing(x_train):
-    x_train[:, 6] = replace(x_train[:, 6], [1100, 1200], [1, 0])
-    x_train[:, 13] = replace(x_train[:, 13], [0, 1], [1, 2])
-    x_train[:, 24] = replace(x_train[:, 24], [1, 2, 7, 9], [0, 1, np.nan, np.nan])
-    x_train[:, 25] = replace(x_train[:, 25], [77, 99], [np.nan, np.nan])
-    x_train[:, 26] = replace(x_train[:, 26], [2,3,4,5,7,9], [0.75,0.5,0.25,0,np.nan,np.nan])
-    array_1 = [27, 28, 29]
-
-    for i in array_1:
-        x_train[:, i] = replace(x_train[:, i], [88, 77, 99], [np.nan, np.nan, np.nan])
-
-    x_train[:, 31] = replace(x_train[:, 31], [3, 7, 9], [0, np.nan, np.nan])
-
-    array_2 = [30, 32, 34, 35, 36, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 53, 54, 55, 56, 57, 61, 64,
-               65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 87, 95, 96, 100, 103, 104, 107, 108, 116, 117, 118]
-
-    for i in array_2:
-        x_train[:, i] = replace(x_train[:, i], [7, 9], [np.nan, np.nan])
-
-    x_train[:, 33] = replace(x_train[:, 33], [1, 2, 3, 4, 7, 8, 9], [6, 18, 42, 60, np.nan, 120, np.nan])
-    x_train[:, 37] = replace(x_train[:, 37], [1, 2, 3, 4, 7, 9], [6, 18, 42, 60, np.nan, np.nan])
-    x_train[:, 49] = replace(x_train[:, 49], [98, 99], [np.nan, np.nan])
-
-    array_3 = [51, 52, 58]
-
-    for i in array_3:
-        x_train[:, i] = replace(x_train[:, i], [9], [np.nan])
-
-    x_train[:, 59] = replace(x_train[:, 59], [88, 99], [0, np.nan])
-    x_train[:, 60] = replace(x_train[:, 60], [1, 2, 3, 4, 5, 6, 7, 8, 77, 99],
-                             [5, 12.5, 17.5, 22.5, 30, 42.5, 62.5, 75, np.nan, np.nan])
-
-    x_train[:, 62] = replace(x_train[:, 62], [7777, 9999], [np.nan, np.nan])
-    x_train[:, 62] = list(map(into_pounds, (x_train[:, 62])))
-
-    x_train[:, 63] = replace(x_train[:, 63], [7777, 9999], [np.nan, np.nan])
-    x_train[:, 63] = list(map(into_inches, (x_train[:, 63])))
-
-    x_train[:, 75] = replace(x_train[:, 75], [1, 2, 3, 4, 5, 6, 7, 8, 77, 99],
-                             [15, 60, 135, 270, 1080, 2070, 3600, np.nan, np.nan, np.nan])
-    x_train[:, 76] = replace(x_train[:, 76], [3, 7, 9], [0, np.nan, np.nan])
-    x_train[:, 77] = replace(x_train[:, 77], [777, 888, 999], [np.nan, 0, np.nan])
-    x_train[:, 77] = list(map(week_to_month, (x_train[:, 77])))
-
-    array_5 = [78, 80, 88, 91, 98, 119]
-
-    for i in array_5:
-        x_train[:, i] = replace(x_train[:, i], [77, 99], [np.nan, np.nan])
-
-    x_train[:, 79] = replace(x_train[:, 79], [77, 88, 99], [np.nan, 0, np.nan])
-
-    array_6 = [81, 82, 83, 84, 85, 86]
-
-    for i in array_6:
-        x_train[:, i] = replace(x_train[:, i], [300, 555, 777, 999], [0, 0, np.nan, np.nan])
-        x_train[:, i] = list(map(day_to_month, (x_train[:, i])))
-
-    array_7 = [89, 90, 92, 93]
-
-    for i in array_7:
-        x_train[:, i] = replace(x_train[:, i], [777, 999], [0, 0, np.nan, np.nan])
-
-    x_train[:, 89] = list(map(week_to_month, (x_train[:, 89])))
-    x_train[:, 90] = list(map(hour_to_min, (x_train[:, 90])))
-    x_train[:, 92] = list(map(hour_to_min, (x_train[:, 92])))
-
-    array_8 = [94, 110, 111]
-
-    for i in array_8:
-        x_train[:, i] = replace(x_train[:, i], [777, 888, 999], [np.nan, 0, np.nan])
-
-    x_train[:, 94] = replace(x_train[:, 94], [777, 888, 999], [np.nan, 0, np.nan])
-    x_train[:, 94] = list(map(week_to_month, (x_train[:, 94])))
-    x_train[:, 97] = replace(x_train[:, 97], [2, 3, 7, 9], [0.5, 0, np.nan, np.nan])
-    x_train[:, 99] = replace(x_train[:, 99], [2, 3, 4, 5, 7, 8, 9], [0.75, 0.5, 0.25, 0, np.nan, np.nan, np.nan])
-    x_train[:, 101] = replace(x_train[:, 101], [777777, 999999], [np.nan, np.nan])
-
-    # x_train[:,101] = list(map(DateType,(x_train[:, 101])))
-
-    x_train[:, 105] = replace(x_train[:, 105], [777777, 999999], [np.nan, np.nan])
-    # x_train[:,105] = list(map(DateType,(x_train[:, 105])))
-
-    x_train[:, 110] = list(map(day_to_year, (x_train[:, 110])))
-    x_train[:, 111] = list(map(day_to_year, (x_train[:, 111])))
-
-    x_train[:, 113] = replace(x_train[:, 113], [77, 88, 98, 99], [np.nan, 0, np.nan, np.nan])
-    x_train[:, 114] = replace(x_train[:, 114], [77, 88, 99], [np.nan, 0, np.nan])
-    x_train[:, 115] = replace(x_train[:, 114], [1, 2, 3, 4, 7, 8, 9], [15, 180, 540, 720, np.nan, 0, np.nan])
-
-    nan79 = [120, 121, 123, 124, 125, 126, 129, 132, 136, 137, 138, 139, 140,
-             141, 142, 144, 151, 154, 155, 156, 157, 158, 159, 160, 161, 162,
-             163, 164, 165, 166, 169, 170, 171, 172, 173, 174, 175, 176, 177,
-             178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
-             191, 194, 196, 198, 199, 201, 202, 203, 204, 205, 214, 261]
-
-    for i in nan79:
-        x_train[:, i] = replace(x_train[:, i], [7, 9], [np.nan, np.nan])
-
-    nan789 = [192, 193]
-
-    for i in nan789:
-        x_train[:, i] = replace(x_train[:, i], [7, 8, 9], [np.nan, np.nan, np.nan])
-
-    nan7799 = [122, 130, 168, 224, 240]
-
-    for i in nan7799:
-        x_train[:, i] = replace(x_train[:, i], [77, 99], [np.nan, np.nan])
-
-    x_train[:, 127] = replace(x_train[:, 127], [6, 7, 9], [np.nan, np.nan])
-    x_train[:, 128] = replace(x_train[:, 128], [6, 7], [np.nan, np.nan])
-
-    nan9 = [131, 153, 200, 223, 230, 231, 232, 233, 234, 235, 236, 241, 242, 243, 244, 255, 256, 257, 258, 259, 260,
-            263,
-            265, 278, 279, 298, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320]
-
-    for i in nan9:
-        x_train[:, i] = replace(x_train[:, i], [9], [np.nan])
-
-    nan7 = [133, 134, 135, 146, 152]
-
-    for i in nan7:
-        x_train[:, i] = replace(x_train[:, i], [7], [np.nan])
-
-    nan99900 = [264, 287, 288, 293, 294, 297]
-    for i in nan99900:
-        x_train[:, i] = replace(x_train[:, i], [99900], [np.nan])
-
-    x_train[:, 143] = replace(x_train[:, 143], [777, 999], [np.nan, np.nan])
-    x_train[:, 143] = list(map(convert_to_days, (x_train[:, 143])))
-
-    x_train[:, 145] = list(map(asthme, (x_train[:, 145])))
-
-    n088_98 = [147, 148]
-
-    for i in n088_98:
-        x_train[:, i] = replace(x_train[:, i], [88, 98], [0, np.nan])
-
-    x_train[:, 149] = replace(x_train[:, 149], [88, 98, 99], [0, np.nan, np.nan])
-    x_train[:, 150] = replace(x_train[:, 150], [777, 888, 999], [np.nan, 0, np.nan])
-
-    x_train[:, 195] = replace(x_train[:, 195], [97, 98, 99], [np.nan, 0, np.nan])
-    x_train[:, 197] = replace(x_train[:, 197], [97, 98, 99], [np.nan, 0, np.nan])
-
-    nan088 = [206, 207, 208, 209, 210, 211, 212, 213]
-    for i in nan088:
-        x_train[:, i] = replace(x_train[:, i], [77, 88, 99], [np.nan, 0, np.nan])
-
-    x_train[:, 225] = replace(x_train[:, 225], [7, 77, 99], [np.nan, np.nan, np.nan])
-    x_train[:, 239] = replace(x_train[:, 239], [7, 77, 99], [np.nan, np.nan, np.nan])
-
-    x_train[:, 246] = replace(x_train[:, 246], [14], [np.nan])
-    x_train[:, 247] = replace(x_train[:, 247], [3], [np.nan])
-    x_train[:, 262] = replace(x_train[:, 262], [900], [np.nan])
-
-    return x_train
-
-
 def cat_sep(data, categorical_features):
     seperated_categories = data.copy()
     for feature in categorical_features:
@@ -1039,3 +1001,45 @@ def cat_sep(data, categorical_features):
                 seperated_categories = np.c_[seperated_categories, new_cat]
 
     return seperated_categories
+
+
+def gen_binary(raw_data, feat_cat, feat_con):
+    data = np.ones(raw_data.shape)
+
+    for i in feat_con:
+        d = clean_binary(raw_data[:, i], False)
+        data[:, i] = d
+
+    for i in feat_cat:
+        d = clean_binary(raw_data[:, i], True)
+        data[:, i] = d
+
+    return data
+
+
+def clean_binary(x, categorical=True):
+    """
+    Replace NaN values in a feature with the median of the non-NaN values.
+
+    Args:
+        :param x: feature to be standardized
+        :param categorical: boolean representing if it is a categorical feature or not
+
+    Returns:
+        numpy.ndarray: 1D array with NaN values replaced by the median.
+    """
+    nan_indices = np.isnan(x)
+    non_nan_values = x[~nan_indices]  # Get non-NaN values
+    median_x = np.median(non_nan_values)
+
+    if categorical:
+        x[nan_indices] = 0
+
+    if not categorical:
+        x[nan_indices] = median_x
+        x = x - np.mean(non_nan_values)
+        std_x = np.std(x[~nan_indices])
+        if std_x != 0:
+            x = x / std_x
+
+    return x
